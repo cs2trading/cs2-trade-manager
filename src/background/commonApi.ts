@@ -113,6 +113,10 @@ async function fetchWithRetry(url, options = {}, retries = 3) {
       }
       // UU 出售&购买列表
     }else if (url.includes("v1/sell/list") || url.includes("v1/buy/list")) {
+      console.log('%c@@@/sell/list===>', 'color:red;font-size:15px', resData)
+      if(resData.code === 84101){
+        return { customError: "error"  };
+      }
       // 悠悠的列表
       const orderList = resData?.data?.orderList;
       // 如果响应数据不是数组，则重试

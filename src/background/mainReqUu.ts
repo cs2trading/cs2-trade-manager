@@ -1,6 +1,7 @@
 import { getUk, randomString2 } from "../common/utils/index.ts";
 import {
   genetate90date,
+  updateNear90Date,
   compareIsUpload,
   isMoreThan3Month,
   setUploadComplete,
@@ -74,7 +75,7 @@ const formatUUData = async (allData, page, orderType, cookie) => {
   const detailReq = [];
   let num = 0;
   // 调试
-  chrome.storage.local.set({ [`UU_${orderType}_Page_${page}`]: orderList });
+  // chrome.storage.local.set({ [`UU_${orderType}_Page_${page}`]: orderList });
   const needDetail = orderList?.filter((item) => item.commodityNum > 3);
   const noNeedDetail = orderList?.filter((item) => item.commodityNum <= 3);
   console.log(
@@ -274,9 +275,9 @@ const uploadDataDetail = async (
   const { commodityTemplateId, paintIndex, sellerSteamId } =
     productDetailList?.[0];
 
-  chrome.storage.local.set({
-    [`UU-detail_${orderNo}_${steamid}`]: userCommodityVOList,
-  });
+  // chrome.storage.local.set({
+  //   [`UU-detail_${orderNo}_${steamid}`]: userCommodityVOList,
+  // });
 
   console.log("%c@@@===>详情：：", "color:green;font-size:15px", list);
   const detaildata = [];

@@ -21,11 +21,18 @@ const init = () => {
           store: localStorage.getItem("store"),
         });
       } else if (message.type === "buff" && href.includes("buff.163.com")) {
-        console.log('%c@@@buffCookie===>', 'color:green;font-size:15px', '这里发送了了么,')
+      
         // 获取cookie
         chrome.runtime.sendMessage({
           type: "buffCookie",
           data: document.cookie,
+        });
+      } else if (message.type === "uu" && href.includes("www.youpin898.com")) {
+        // 获取cookie
+        chrome.runtime.sendMessage({
+          type: "uuCookie",
+          data: document.cookie,
+          store: localStorage.getItem("USER_INFO"),
         });
       } else {
         chrome.runtime.sendMessage({ type: "noMatch", data: message.type }); // 空消息 没有命中

@@ -80,7 +80,7 @@ const formatBuffData = async (allData, page, orderType, cookie) => {
   }
 
   // 调试
-  chrome.storage.local.set({ [`BUFF_${orderType}_Page_${page}`]: items });
+  // chrome.storage.local.set({ [`BUFF_${orderType}_Page_${page}`]: items });
   const validItems =
     orderType === 1
       ? items

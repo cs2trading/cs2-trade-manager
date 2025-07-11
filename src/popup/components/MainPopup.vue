@@ -165,7 +165,7 @@ const openGithub = () => {
 };
 const openGitee = () => {
   chrome.tabs.create({
-    url: "https://gitee.com/csprogrammer/cs2-trade-manager",
+    url: "https://gitee.com/cs2trading/cs2-trade-manager",
   });
 };
 

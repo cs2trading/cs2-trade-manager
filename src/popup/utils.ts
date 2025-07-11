@@ -234,17 +234,13 @@ export const getUUData = async (cookie, errorCb) => {
       }
     );
     const data = await res.json();
-    const {
-      data: { total },
-    } = data;
+    // const {
+    //   data: { total },
+    // } = data;
   } catch (error) {
     
       console.log("错误");
-    console.log(
-      "%c@@@{ [`${userKey}${type}${key}Page`]: page }===>",
-      "color:green;font-size:15px",
-      error
-    );
+  
     errorCb("uu");
   }
 };

@@ -4,9 +4,8 @@ import { complatePercentage } from "./utilsNew";
  import {getUUSellData} from './mainReqUU'
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 
-  console.log('%c@@@document.cookie===>', 'color:green;font-size:15px', 'servicede')
-  if (["c5Cookie", "buffCookie"].includes(message.type)) {
-  
+  console.log('%c@@@document.cookie===>', 'color:green;font-size:15px', 'servicede', message)
+  if (["c5Cookie", "buffCookie", 'uuCookie'].includes(message.type)) {
     chrome.runtime.sendMessage(message);
   }
 
@@ -17,7 +16,8 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     getC5SellData(message.data, 1);
   }
   if (message.type === "collectUU") {
-    getUUSellData(message.data, 1);
+    const cookie = message.data!==true? message.data?.split('=')?.[1] :'';
+    getUUSellData(cookie, 1);
   }
   if (message.type === "collectBuff") {
     getBuffSellData(message.data, 1);

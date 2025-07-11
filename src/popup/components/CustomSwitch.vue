@@ -72,8 +72,15 @@ const uploading = ref(false);
 watch(
   () => [props.isUploading, props.cancelTimerNum],
   (newVal, oldVal) => {
-    console.log('%c@@@props.isUploading===>', 'color:green;font-size:15px', props.isUploading)
-    if ((!props.isUploading && props.cancelTimerNum < 10) || props.isUploading) {
+    console.log(
+      "%c@@@props.isUploading===>",
+      "color:green;font-size:15px",
+      props.isUploading
+    );
+    if (
+      (!props.isUploading && props.cancelTimerNum < 10) ||
+      props.isUploading
+    ) {
       uploading.value = true;
     } else {
       uploading.value = false;
@@ -104,18 +111,27 @@ const uuLoginClose = (status) => {
 };
 const reLoginNoValid = async () => {
   const url = await getURL();
-  if (props.type === "c5" && url.includes("c5game.com")) {
-    // 在c5
-    messageSwitchRef.value?.show("warning", "请登录后，重新打开插件");
-    return;
-  } else {
-    chrome.tabs.create({ url: "https://www.c5game.com" });
-  }
-  if (props.type === "buff" && url.includes("buff.163.com")) {
-    messageSwitchRef.value?.show("warning", "请登录后，重新打开插件");
-    return;
-  } else {
-    chrome.tabs.create({ url: "https://buff.163.com" });
+  if (props.type === "c5") {
+    if (url.includes("c5game.com")) {
+      messageSwitchRef.value?.show("warning", "请登录后，重新打开插件");
+      return;
+    } else {
+      chrome.tabs.create({ url: "https://www.c5game.com" });
+    }
+  } else if (props.type === "buff") {
+    if (url.includes("buff.163.com")) {
+      messageSwitchRef.value?.show("warning", "请登录后，重新打开插件");
+      return;
+    } else {
+      chrome.tabs.create({ url: "https://buff.163.com" });
+    }
+  } else if (props.type === "uu") {
+    if (url.includes("www.youpin898.com")) {
+      messageSwitchRef.value?.show("warning", "请登录后，重新打开插件");
+      return;
+    } else {
+      chrome.tabs.create({ url: "https://www.youpin898.com" });
+    }
   }
 };
 
@@ -130,71 +146,105 @@ async function isAgree(key) {
 }
 
 const openSwitch = async (isAgree) => {
-   const url = await getURL();
+  const url = await getURL();
   if (props.type === "c5") {
-    if (!url.includes("c5game.com")&&isAgree) {
+    if (!url.includes("c5game.com") && isAgree) {
       messageSwitchRef.value?.show("warning", "请在C5GAME平台打开插件");
-      setTimeout(() => {chrome.tabs.create({ url: "https://www.c5game.com" });},2000);
+      setTimeout(() => {
+        chrome.tabs.create({ url: "https://www.c5game.com" });
+      }, 2000);
       return;
     }
     const { c5Cookie } = await chrome.storage.local.get(["c5Cookie"]);
     if (c5Cookie) {
       selected.value = true;
       emits("change", props.type, selected.value);
+    } else {
+      noCookieRef.value?.show("c5", url);
+      selected.value = false;
     }
     if (!c5Cookie && !url.includes("c5game.com")) {
-      noCookieRef.value?.show("c5");
+      noCookieRef.value?.show("c5", url);
+      selected.value = false;
     }
   }
   if (props.type === "buff") {
     const { buffCookie } = await chrome.storage.local.get(["buffCookie"]);
-  
-    if (!url.includes("buff.163.com")&&isAgree) {
+
+    if (!url.includes("buff.163.com") && isAgree) {
       messageSwitchRef.value?.show("warning", "请在BUFF平台打开插件");
-      setTimeout(()=>{
+      setTimeout(() => {
         chrome.tabs.create({ url: "https://buff.163.com" });
-      },2000)
+      }, 2000);
       return;
     }
     if (buffCookie) {
       selected.value = true;
       emits("change", props.type, selected.value);
+    } else {
+      noCookieRef.value?.show("buff", url);
+      selected.value = false;
     }
 
     if (!buffCookie && !url.includes("buff.163.com")) {
-      noCookieRef.value?.show("buff");
+      noCookieRef.value?.show("buff", url);
+      selected.value = false;
     }
   }
-  if (isAgree && props.type === "uu") {
-    uuLoginRef.value?.show();
+
+  if (props.type === "uu") {
+    if (!url.includes("youpin898.com") && isAgree) {
+      messageSwitchRef.value?.show("warning", "请在悠悠有品平台打开插件");
+      setTimeout(() => {
+        chrome.tabs.create({ url: "https://www.youpin898.com" });
+      }, 2000);
+      return;
+    }
+    const { uuCookie } = await chrome.storage.local.get(["uuCookie"]);
+
+    if (uuCookie) {
+      selected.value = true;
+      emits("change", props.type, selected.value);
+    } else {
+      noCookieRef.value?.show("uu", url);
+      selected.value = false;
+    }
+    if (!uuCookie && !url.includes("youpin898.com")) {
+      noCookieRef.value?.show("uu", url);
+      selected.value = false;
+    }
   }
-}
+  // if (isAgree && props.type === "uu") {
+  //   uuLoginRef.value?.show();
+  // }
+};
 
 const getCookies = async (isAgree) => {
-  await openSwitch(isAgree)
+   setTimeout(() => {
+      openSwitch(isAgree);
+    }, 1000);
+  // await openSwitch(isAgree);
   // if (!isAgree) {
-    let queryOptions = { active: true, lastFocusedWindow: true };
-    // `tab` will either be a `tabs.Tab` instance or `undefined`.
-    let [tab] = await chrome.tabs.query(queryOptions);
-  
-    if (tab && props.type !== "uu") {
-      // 使用 chrome.tabs.sendMessage 发送消息
-      console.log('%c@@@document.cookie===>', 'color:green;font-size:15px', '发送Cookie')
-      chrome.tabs.sendMessage(tab.id, {
-        type: props.type,
-        url: tab.url,
-      });
-    }
+  let queryOptions = { active: true, lastFocusedWindow: true };
+  // `tab` will either be a `tabs.Tab` instance or `undefined`.
+  let [tab] = await chrome.tabs.query(queryOptions);
+
+  if (tab) {
+    // 使用 chrome.tabs.sendMessage 发送消息
+
+    chrome.tabs.sendMessage(tab.id, {
+      type: props.type,
+      url: tab.url,
+    });
+  }
   // }
 
-  console.log('%c@@@openSwitch()===>', 'color:green;font-size:15px',isAgree )
-  if(isAgree&&props.type!== "uu"){
-    await chrome.storage.local.set({ [`${props.type}Cookie`]: true })
-    setTimeout(()=>{
-      openSwitch(isAgree)
-    }, 1000)
+  if (isAgree) {
+    // await chrome.storage.local.set({ [`${props.type}Cookie`]: true });
+    setTimeout(() => {
+      openSwitch(isAgree);
+    }, 1500);
   }
-
 };
 
 const getURL = async () => {
@@ -222,21 +272,7 @@ async function toggleSwitch() {
   }
 
   // 第二步 获取Cookie
-  if (props.type === "uu") {
-    // UU 单独处理
-    const { uuCookie } = await chrome.storage.local.get(["uuCookie"]);
-    if (!uuCookie) {
-      // 没有UU Cookie
-      messageSwitchRef.value?.show("warning", "请先登录悠悠");
-      uuLoginRef.value?.show();
-      return;
-    } else {
-      selected.value = true;
-      emits("change", props.type, selected.value);
-    }
 
-    return;
-  }
   getCookies(false);
 }
 // 监听发送过来的Cookie  ['c5Cookie','uuCookie','buffCookie']
@@ -249,7 +285,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
         messageSwitchRef.value?.show("warning", "请登录后，重新打开插件");
         return;
       }
-      // noCookieRef.value?.show("c5");
+  
     }
     if (message.data === "buff" && props.type === "buff") {
       if (url.includes("buff.163.com")) {
@@ -257,7 +293,15 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
         return;
       }
 
-      // noCookieRef.value?.show("buff");
+ 
+    }
+    if (message.data === "uu" && props.type === "uu") {
+      if (url.includes("www.youpin898.com")) {
+        messageSwitchRef.value?.show("warning", "请登录后，重新打开插件");
+        return;
+      }
+
+    
     }
 
     return;
@@ -291,21 +335,18 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
         chrome.storage.local.set({ buffuser: useId });
       }
     }
-    console.log('%c@@@message===>', 'color:green;font-size:15px', message)
+    if (message.type === "uuCookie") {
+      console.log("UU的消息", message.data);
+      const store = JSON.parse(message?.store || "{}");
+
+      const UserId = store?.UserId;
+      if (UserId) {
+        chrome.storage.local.set({ uuuser: UserId });
+      }
+    }
 
     chrome.storage.local.set({ [message.type]: message.data }, function () {
-      selected.value = true;
-      emits("change", props.type, selected.value);
       validLoginStatus();
-      chrome.notifications.create(
-        {
-          type: "basic",
-          title: "CS2交易记录管理工具",
-          message: "获取登录信息",
-          iconUrl: "../icons/icon_32.png",
-        },
-        (notificationId) => {}
-      );
     });
   }
 });
@@ -314,6 +355,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 const validLoginStatus = async () => {
   const { switchLocal } = await chrome.storage.local.get(["switchLocal"]);
   const keys = switchLocal ? Object.keys(switchLocal) : [];
+  const url = await getURL();
 
   keys?.forEach(async (key) => {
     if (switchLocal[key]) {
@@ -321,6 +363,11 @@ const validLoginStatus = async () => {
       // 获取Cookie
       if (key === "c5") {
         const { c5Cookie } = await chrome.storage.local.get(["c5Cookie"]);
+        if (!c5Cookie) {
+          noCookieRef.value?.show("c5", url);
+          selected.value = false;
+          return;
+        }
         const cookieArr = c5Cookie?.split(";");
         const c5CookieObj = {};
         cookieArr.forEach((item) => {
@@ -331,18 +378,50 @@ const validLoginStatus = async () => {
       }
       if (key === "uu") {
         const { uuCookie } = await chrome.storage.local.get(["uuCookie"]);
-        getUUData(uuCookie, showErrorFn);
+        if (!uuCookie) {
+          noCookieRef.value?.show("uu", url);
+          selected.value = false;
+          return;
+        }
+        const cookieArr = uuCookie?.split("=");
+        console.log(
+          "%获取的Cookie",
+          "color:green;font-size:15px",
+          uuCookie,
+          cookieArr
+        );
+
+        getUUData(cookieArr?.[1], showErrorFn);
       }
       if (key === "buff") {
         const { buffCookie } = await chrome.storage.local.get(["buffCookie"]);
+        if (!buffCookie) {
+          noCookieRef.value?.show("buff", url);
+          selected.value = false;
+          return;
+        }
         getBuffData(buffCookie, showErrorFn);
       }
     }
+    selected.value = true;
+    emits("change", props.type, selected.value);
+    chrome.notifications.create(
+      {
+        type: "basic",
+        title: "CS2交易记录管理工具",
+        message: "获取登录信息",
+        iconUrl: "../icons/icon_32.png",
+      },
+      (notificationId) => {}
+    );
   });
 };
-watch(()=>selected.value, ()=>{
-  showError.value = false;
-})
+watch(
+  () => selected.value,
+  () => {
+    showError.value = false;
+  }
+);
 
 const refreshStatus = () => {
   chrome.storage.local.get(["switchLocal"], (data) => {
