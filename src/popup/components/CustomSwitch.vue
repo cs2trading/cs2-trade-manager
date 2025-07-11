@@ -383,15 +383,23 @@ const validLoginStatus = async () => {
           selected.value = false;
           return;
         }
-        const cookieArr = uuCookie?.split("=");
-        console.log(
-          "%获取的Cookie",
-          "color:green;font-size:15px",
-          uuCookie,
-          cookieArr
-        );
 
-        getUUData(cookieArr?.[1], showErrorFn);
+        const cookieArr = uuCookie?.split(";");
+        const uuCookieObj = {};
+        cookieArr.forEach((item) => {
+          const [key, value] = item.split("=");
+          uuCookieObj[key.trim()] = value;
+        });
+
+        // const cookieArr = uuCookie?.split("=");
+        // console.log(
+        //   "%获取的Cookie",
+        //   "color:green;font-size:15px",
+        //   uuCookie,
+        //   cookieArr
+        // );
+
+        getUUData(uuCookieObj["uu_token"], showErrorFn);
       }
       if (key === "buff") {
         const { buffCookie } = await chrome.storage.local.get(["buffCookie"]);

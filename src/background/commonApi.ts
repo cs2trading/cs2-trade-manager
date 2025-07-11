@@ -564,7 +564,7 @@ export const getUUSellDataApi = async (cookie: string, page: number) => {
         systemVersion: "11",
       },
       AppType: 4,
-      Authorization: `Bearer ${cookie}`,
+      Authorization: `${cookie}`,
       "User-Agent": "okhttp/3.14.9",
       "Content-Type": "application/json",
     };
@@ -618,7 +618,7 @@ export const getUUBuyDataApi = async (cookie: string, page: number) => {
         systemVersion: "11",
       },
       AppType: 4,
-      Authorization: `Bearer ${cookie}`,
+      Authorization: `${cookie}`,
       "User-Agent": "okhttp/3.14.9",
       "Content-Type": "application/json",
     };
@@ -656,7 +656,7 @@ export const getUUSpeicalStyle = async (id, cookie) => {
         headers: {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": "*",
-          Authorization: `Bearer ${cookie}`,
+          Authorization: `${cookie}`,
         },
         resolve,
       }
@@ -697,7 +697,7 @@ export const getUUDetail = async ({ cookie, orderNo, userId, orderType }) => {
         systemVersion: "11",
       },
       AppType: 4,
-      Authorization: `Bearer ${cookie}`,
+      Authorization: `${cookie}`,
       "User-Agent": "okhttp/3.14.9",
       "Content-Type": "application/json",
     };

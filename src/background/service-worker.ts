@@ -16,8 +16,17 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     getC5SellData(message.data, 1);
   }
   if (message.type === "collectUU") {
-    const cookie = message.data!==true? message.data?.split('=')?.[1] :'';
-    getUUSellData(cookie, 1);
+    // const cookie = message.data!==true? message.data?.split('=')?.[1] :'';
+
+    const cookieArr = message.data?.split(";");
+    const uuCookieObj = {};
+    cookieArr.forEach((item) => {
+      const [key, value] = item.split("=");
+      uuCookieObj[key.trim()] = value;
+    });
+
+
+    getUUSellData(uuCookieObj["uu_token"], 1);
   }
   if (message.type === "collectBuff") {
     getBuffSellData(message.data, 1);

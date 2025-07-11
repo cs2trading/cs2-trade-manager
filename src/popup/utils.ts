@@ -211,7 +211,7 @@ export const getUUData = async (cookie, errorCb) => {
       systemVersion: "11",
     },
     AppType: 4,
-    Authorization: `Bearer ${cookie}`,
+    Authorization: `${cookie}`,
     "User-Agent": "okhttp/3.14.9",
     "Content-Type": "application/json",
   };
