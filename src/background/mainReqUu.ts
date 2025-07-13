@@ -73,6 +73,8 @@ const formatUUData = async (allData, page, orderType, cookie) => {
   const uploadData = [];
 
   const detailReq = [];
+
+  const { uuSteamId } = await chrome.storage.local.get([`uuSteamId`]);
   let num = 0;
   // 调试
   // chrome.storage.local.set({ [`UU_${orderType}_Page_${page}`]: orderList });
@@ -88,7 +90,6 @@ const formatUUData = async (allData, page, orderType, cookie) => {
   for (let item of noNeedDetail) {
     const {
       productDetailList,
-      steamid,
       commodityNum,
       orderNo,
       buyerUserId,
@@ -138,7 +139,7 @@ const formatUUData = async (allData, page, orderType, cookie) => {
           orderType, // 1 买入  2 售出
           platform: "YOUPIN",
           marketHashName: commodityHashName,
-          steamId: orderType === 1 ? steamid : sellerSteamId,
+          steamId: uuSteamId,
           assertId,
           classId: "",
           instanceId: "",
@@ -160,12 +161,10 @@ const formatUUData = async (allData, page, orderType, cookie) => {
     );
 
   }
-
   for (let item of needDetail) {
     // 需要详情
     const {
       productDetailList,
-      steamid,
       commodityNum,
       orderNo,
       buyerUserId,
@@ -177,7 +176,7 @@ const formatUUData = async (allData, page, orderType, cookie) => {
       buyerUserId,
       productDetailList,
       orderType,
-      steamid,
+      steamId:uuSteamId,
       uUspecialList,
       createOrderTime,
     };
@@ -260,9 +259,9 @@ const uploadDataDetail = async (
 ) => {
   const pause = await Pause();
   if (pause) return;
+  const { uuSteamId } = await chrome.storage.local.get([`uuSteamId`]);
   const {
     orderNo,
-    steamid,
     productDetailList,
     uUspecialList,
     createOrderTime,
@@ -282,6 +281,7 @@ const uploadDataDetail = async (
   console.log("%c@@@===>详情：：", "color:green;font-size:15px", list);
   const detaildata = [];
   let index = 0;
+
 
   for (let item of list) {
     const {
@@ -321,7 +321,7 @@ const uploadDataDetail = async (
         platform: "YOUPIN",
         marketHashName: commodityHashName,
         name,
-        steamId: orderType === 1 ? steamid : sellerSteamId,
+        steamId: uuSteamId,
         assertId: "",
         classId: "",
         instanceId: "",
