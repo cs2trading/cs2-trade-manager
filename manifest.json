@@ -22,9 +22,7 @@
     "tabs",
     "alarms",
     "storage",
-    "notifications",
-    "scripting",
-    "cookies"
+    "notifications"
   ],
   "host_permissions": ["<all_urls>","https://www.c5game.com/*", "https://www.youpin898.com/*","https://buff.163.com/*", "https://www.c5game.com/"],
   "content_scripts": [
