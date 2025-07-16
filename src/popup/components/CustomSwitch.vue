@@ -315,8 +315,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
       if (userId) {
         chrome.storage.local.set({ c5user: userId });
       }
-    }
-    if (message.type === "buffCookie") {
+    }else if (message.type === "buffCookie") {
       const res = await fetch(
         "https://buff.163.com/account/api/user/info/v2?meta_list=is_premium&_=" +
           new Date().getTime(),
@@ -334,15 +333,19 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
       if (useId) {
         chrome.storage.local.set({ buffuser: useId });
       }
-    }
-    if (message.type === "uuCookie") {
-      console.log("UU的消息", message.data);
+    }else if (message.type === "uuCookie") {
+      console.log("UU的消息", message);
       const store = JSON.parse(message?.store || "{}");
-
+      const SteamId = store?.SteamId;
       const UserId = store?.UserId;
-      if (UserId) {
+      if (SteamId) {
+        chrome.storage.local.set({ uuSteamId: SteamId });
         chrome.storage.local.set({ uuuser: UserId });
+      }else {
+        messageSwitchRef.value?.show("warning", "当前悠悠有品账号未绑定Steam");
+        return;
       }
+
     }
 
     chrome.storage.local.set({ [message.type]: message.data }, function () {
