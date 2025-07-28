@@ -144,10 +144,13 @@ export const getC5Data = async (cookie:string, errorCb:(type:string)=>void) => {
     const { errorCode } = allData;
     if (errorCode === 101) {
       errorCb("c5");
+      return false
     }
+    return true
   } catch (error) {
-    
+   
       console.log("错误");
+        return false
   }
 };
 
@@ -178,13 +181,15 @@ export const getBuffData = async (cookie:string, errorCb:(type:string)=>void) =>
     const {code} = allData;
     if(code === 'Login Required'){
         errorCb("buff");
+        return false
     }
-  
+  return true
     
   } catch (error) {
     
     console.log("错误");
     errorCb("buff");
+    return false
   }
 };
 
@@ -241,13 +246,14 @@ export const getUUData = async (cookie:string, errorCb:(type:string)=>void) => {
     console.log('UU=data', data)
     if(data.code === 84101){
       errorCb("uu");
+      return false
     }
-    
+    return true
   } catch (error) {
     
       console.log("错误");
-  
     errorCb("uu");
+    return false
   }
 };
 

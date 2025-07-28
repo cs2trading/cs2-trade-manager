@@ -195,7 +195,6 @@ const openSwitch = async (isAgree) => {
 
     if (uuCookie) {
       selected.value = true;
-
       emits("change", props.type, selected.value);
       validLoginStatus();
     } else {
@@ -331,7 +330,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
         chrome.storage.local.set({ buffuser: useId });
       }
     } else if (message.type === "uuCookie") {
-      console.log("UU的消息", message);
+      
       const store = JSON.parse(message?.store || "{}");
       const SteamId = store?.SteamId;
       const UserId = store?.UserId;
@@ -340,15 +339,14 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
         chrome.storage.local.set({ uuuser: UserId });
       } else {
         messageSwitchRef.value?.show("warning", "当前悠悠有品账号未绑定Steam");
-        // selected.value = false;
+        selected.value = false;
       }
     }
     chrome.storage.local.set({ [message.type]: message.data }, function () {
-      // selected.value = true
-      if (message.type.includes(props.type)) {
-        selected.value = true;
-      }
-      // validLoginStatus();
+     
+      // if (message.type.includes(props.type)) {
+      //   selected.value = true;
+      // }
     });
   }
 });
@@ -359,7 +357,7 @@ const validLoginStatus = async () => {
   const { switchLocal } = await chrome.storage.local.get(["switchLocal"]);
   const keys = switchLocal ? Object.keys(switchLocal) : [];
   const url = await getURL();
-
+  const resArr = []
   keys?.forEach(async (key) => {
     if (switchLocal[key]) {
       // 开启了
@@ -377,7 +375,8 @@ const validLoginStatus = async () => {
           const [key, value] = item.split("=");
           c5CookieObj[key.trim()] = value;
         });
-        await getC5Data(c5CookieObj["NC5_accessToken"], showErrorFn);
+        const c5valide = await getC5Data(c5CookieObj["NC5_accessToken"], showErrorFn);
+        resArr.push(c5valide)
       }
       if (key === "uu") {
         const { uuCookie } = await chrome.storage.local.get(["uuCookie"]);
@@ -394,7 +393,8 @@ const validLoginStatus = async () => {
           uuCookieObj[key.trim()] = value;
         });
 
-        await getUUData(uuCookieObj["uu_token"], showErrorFn);
+        const uuvalide = await getUUData(uuCookieObj["uu_token"], showErrorFn);
+        resArr.push(uuvalide)
       }
       if (key === "buff") {
         const { buffCookie } = await chrome.storage.local.get(["buffCookie"]);
@@ -403,10 +403,17 @@ const validLoginStatus = async () => {
           selected.value = false;
           return;
         }
-        await getBuffData(buffCookie, showErrorFn);
+        const buffvalide = await getBuffData(buffCookie, showErrorFn);
+        resArr.push(buffvalide)
       }
     }
-    selected.value = true;
+     
+     if(resArr?.every(item => item)){
+      selected.value = true;
+     }else{
+       selected.value = false;
+     }
+   
     emits("change", props.type, selected.value);
   });
 
