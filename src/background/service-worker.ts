@@ -15,7 +15,7 @@ chrome.runtime.onMessage.addListener(async (message:any) => {
     getPercent();
   }
   if (message.type === "collectC5") {
-    getC5SellData(message.data, 1);
+    getC5SellData(message.data, 1, 3);
   }
   if (message.type === "collectUU") {
     // const cookie = message.data!==true? message.data?.split('=')?.[1] :'';

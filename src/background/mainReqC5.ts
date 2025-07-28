@@ -15,7 +15,11 @@ import {
 const intervalTimeList = 5000; // 列表5S
 const intervalTimeDetail = 3000; // 详情3S
 
-export const getC5SellData = async (cookie:string, page:number) => {
+export const getC5SellData = async (
+  cookie: string,
+  page: number,
+  status: number
+) => {
   const pause = await Pause();
   if (pause) return;
   if (page === 1) {
@@ -23,30 +27,35 @@ export const getC5SellData = async (cookie:string, page:number) => {
     await genetate90date("c5Sell");
   }
 
-    const data = await getC5SellApi(cookie, page);
-    await formatC5Data(data, page, 2, cookie); // 整理数据 并上传
-
+  const data = await getC5SellApi(cookie, page, status);
+  await formatC5Data(data, page, 2, cookie,status); // 整理数据 并上传
 };
 
-const formatC5Data = async (data:any, page:number, orderType:number, cookie:string) => {
+const formatC5Data = async (
+  data: any,
+  page: number,
+  orderType: number,
+  cookie: string,
+  status: number
+) => {
   const pause = await Pause();
   if (pause) return;
   const { total, list } = data.data;
   // 整理list数据
   const uploadData: any[] = [];
   // 调试
-  chrome.storage.local.set({ [`C5_${orderType}_Page_${page}`]: list });
+  // chrome.storage.local.set({ [`C5_${orderType}_Page_${page}`]: list });
 
-  const needDetail = list?.filter((item:any) => item.orderAssetList?.length > 5);
-  const noNeedDetail = list?.filter((item:any) => item.orderAssetList?.length <= 5);
+  const needDetail = list?.filter(
+    (item: any) => item.orderAssetList?.length > 5
+  );
+  const noNeedDetail = list?.filter(
+    (item: any) => item.orderAssetList?.length <= 5
+  );
 
-  noNeedDetail?.forEach((item:any) => {
-    const {
-      orderAssetList,
-      buyerSteamInfo,
-      sellerSteamInfo
-    } = item;
-    orderAssetList?.forEach((orderAsset:any) => {
+  noNeedDetail?.forEach((item: any) => {
+    const { orderAssetList, buyerSteamInfo, sellerSteamInfo } = item;
+    orderAssetList?.forEach((orderAsset: any) => {
       const {
         orderAssetId,
         itemId,
@@ -91,13 +100,7 @@ const formatC5Data = async (data:any, page:number, orderType:number, cookie:stri
   }
 
   for (let item of needDetail) {
-    const {
-    
-      buyerSteamInfo,
-      sellerSteamInfo,
-      orderId,
-      orderCreateTime,
-    } = item;
+    const { buyerSteamInfo, sellerSteamInfo, orderId, orderCreateTime } = item;
 
     const steamId =
       orderType === 1 ? buyerSteamInfo?.steamId : sellerSteamInfo?.steamId;
@@ -110,11 +113,11 @@ const formatC5Data = async (data:any, page:number, orderType:number, cookie:stri
         steamId,
       };
       await new Promise((resolve) => setTimeout(resolve, intervalTimeDetail)); // 等待3秒
-      const res:any = await getC5DetailApi(detaileq);
+      const res: any = await getC5DetailApi(detaileq);
 
       const detail = res.data?.orderInfo?.orderAssetList;
       const detailList: any[] = [];
-      detail?.forEach((orderAsset:any) => {
+      detail?.forEach((orderAsset: any) => {
         const {
           orderAssetId,
           itemId,
@@ -144,7 +147,7 @@ const formatC5Data = async (data:any, page:number, orderType:number, cookie:stri
         }
       });
       //   await new Promise((resolve) => setTimeout(resolve, intervalTimeDetail)); // 等待3秒
-       await uploadDataToServer(
+      await uploadDataToServer(
         detailList,
         page,
         orderType,
@@ -158,7 +161,7 @@ const formatC5Data = async (data:any, page:number, orderType:number, cookie:stri
     if (orderType === 2) {
       flags.c5Sell = 100; // 标记完成
       setUploadComplete("c5Sell");
-      getC5Data(cookie, 1);
+      getC5Data(cookie, 1, status);
     } else {
       flags.c5Buy = 100; // 标记完成
       setUploadComplete("c5Buy");
@@ -192,16 +195,16 @@ const formatC5Data = async (data:any, page:number, orderType:number, cookie:stri
             if (!p) {
               flags.c5Sell = 100; // 标记完成
               setUploadComplete("c5Sell");
-              getC5Data(cookie, 1);
+              getC5Data(cookie, 1, status);
             } else {
-              getC5SellData(cookie, p + 1);
+              getC5SellData(cookie, p + 1, status);
             }
           } else {
             if (!p) {
               flags.c5Buy = 100; // 标记完成
               setUploadComplete("c5Buy");
             } else {
-              getC5Data(cookie, p + 1);
+              getC5Data(cookie, p + 1, status);
             }
           }
         });
@@ -211,7 +214,7 @@ const formatC5Data = async (data:any, page:number, orderType:number, cookie:stri
     if (orderType === 2) {
       flags.c5Sell = 100; // 标记完成
       setUploadComplete("c5Sell");
-      getC5Data(cookie, 1);
+      getC5Data(cookie, 1, status);
     } else {
       flags.c5Buy = 100; // 标记完成
       setUploadComplete("c5Buy");
@@ -219,15 +222,14 @@ const formatC5Data = async (data:any, page:number, orderType:number, cookie:stri
   }
 };
 
-
-export const getC5Data = async (cookie:string, page:number) => {
+export const getC5Data = async (cookie: string, page: number,status:number) => {
   const pause = await Pause();
-  console.log("getC5Data,pause",pause)
+  console.log("getC5Data,pause", pause);
   if (pause) return;
   if (page === 1) {
     flags.c5Buy = 0;
     await genetate90date("c5Buy");
   }
-  const allData = await getC5BuyApi(cookie, page);
-  await formatC5Data(allData, page, 1, cookie); // 整理数据 并上传
+  const allData = await getC5BuyApi(cookie, page,status);
+  await formatC5Data(allData, page, 1, cookie,status); // 整理数据 并上传
 };

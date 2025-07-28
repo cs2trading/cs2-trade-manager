@@ -183,10 +183,7 @@ export const uploadDataToServer = async (
   platform,
   isEnd
 ) => {
-  // console.log("上传的数据", data);
-  const params = {
-    tradeHistoryList: data,
-  };
+ 
   if (data.length < 1) {
     return;
   }
@@ -308,13 +305,14 @@ export const getSpecialList = async () => {
   return data;
 };
 
-export const getC5SellApi = async (cookie: string, page: number) => {
+export const getC5SellApi = async (cookie: string, page: number,status:number = 3) => {
+
   return await new Promise(async (resolve) => {
     const params = new URLSearchParams({
-      page,
-      limit: 70,
-      appId: 730,
-      status: 3,
+      page: page.toString(),
+      limit: '70',
+      appId: '730',
+      status: status.toString(),
       type: "",
       keyword: "",
     });
@@ -336,13 +334,15 @@ export const getC5SellApi = async (cookie: string, page: number) => {
   });
 };
 
-export const getC5BuyApi = async (cookie: string, page: number) => {
+export const getC5BuyApi = async (cookie: string, page: number,status:number = 3) => {
+
+
   return await new Promise(async (resolve) => {
     const params = new URLSearchParams({
-      page,
-      limit: 70,
-      appId: 730,
-      status: 3,
+      page: page.toString(),
+      limit: '70',
+      appId: '730',
+      status: status.toString(),
       type: "",
       keyword: "",
     });
@@ -369,9 +369,7 @@ export const getC5BuyApi = async (cookie: string, page: number) => {
 export const getC5DetailApi = async ({
   orderId,
   orderType,
-  cookie,
-  orderCreateTime,
-  steamId,
+  cookie
 }) => {
   return await new Promise(async (resolve) => {
     const typeStr = orderType === 1 ? "buyer-order" : "seller-order"; // 1 买入  2 售出
