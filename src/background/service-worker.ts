@@ -1,10 +1,12 @@
 import { complatePercentage } from "./utilsNew"; 
  import {getC5SellData} from './mainReqC5'
  import { getBuffSellData } from "./mainReqBuff";
- import {getUUSellData} from './mainReqUU'
-chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+ import {getUUSellData} from './mainReqUu'
 
-  console.log('%c@@@document.cookie===>', 'color:green;font-size:15px', 'servicede', message)
+ // @ts-ignore
+chrome.runtime.onMessage.addListener(async (message:any) => {
+
+  // console.log('%c@@@document.cookie===>', 'color:green;font-size:15px', 'servicede', message)
   if (["c5Cookie", "buffCookie", 'uuCookie'].includes(message.type)) {
     chrome.runtime.sendMessage(message);
   }
@@ -17,15 +19,12 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   }
   if (message.type === "collectUU") {
     // const cookie = message.data!==true? message.data?.split('=')?.[1] :'';
-
     const cookieArr = message.data?.split(";");
-    const uuCookieObj = {};
-    cookieArr.forEach((item) => {
+    const uuCookieObj:{[key: string]: string} = {};
+    cookieArr.forEach((item: string) => {
       const [key, value] = item.split("=");
       uuCookieObj[key.trim()] = value;
     });
-
-
     getUUSellData(uuCookieObj["uu_token"], 1);
   }
   if (message.type === "collectBuff") {
@@ -39,12 +38,12 @@ chrome.alarms.create("myAlarm", {
 });
 
 function getPercent() {
-  let timer = setInterval(() => {
+  let timer: ReturnType<typeof setInterval> | null = setInterval(() => {
     const percent = complatePercentage();
 
     chrome.runtime.sendMessage({ type: "percent", data: percent });
     if (percent >= 100) {
-      clearInterval(timer);
+      clearInterval(timer as number);
       timer = null;
     }
   }, 2000);
