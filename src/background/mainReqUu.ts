@@ -189,7 +189,7 @@ const formatUUData = async (
         compareIsUpload(
           orderType === 1 ? "uuBuy" : "uuSell",
           orderList[orderList.length - 1].createOrderTime,
-          orderList[0].createOrderTime,
+      
           page,
           stagePage
         ).then((p) => {

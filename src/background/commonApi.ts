@@ -184,7 +184,7 @@ export const uploadDataToServer = async (
   data:any,
   page:number,
   orderType:number,
-  platform:number,
+  platform:string,
   isEnd:boolean
 ) => {
   if (data.length < 1) {
@@ -203,7 +203,7 @@ const upload100toServer = async (
   uplist: any[],
   page: number,
   orderType: number,
-  platform: number
+  platform: string
 ) => {
   const num = uplist.length;
   if (num === 1) {
@@ -235,7 +235,7 @@ const uploadApi = async (
   params: any,
   page: number,
   orderType: number,
-  platform: number,
+  platform: string,
   isRecord: boolean
 ) => {
   return new Promise(async (resolve, reject) => {
@@ -268,7 +268,7 @@ const uploadApi = async (
 
       if (uploadRes.success && isRecord) {
         updateRecordDate(
-          page,
+     
           orderType,
           platform,
           params[params.length - 1]?.tradeTime

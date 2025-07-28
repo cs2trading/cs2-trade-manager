@@ -72,7 +72,6 @@ const uploading = ref(false);
 watch(
   () => [props.isUploading, props.cancelTimerNum],
   (newVal, oldVal) => {
-  
     if (
       (!props.isUploading && props.cancelTimerNum < 10) ||
       props.isUploading
@@ -91,12 +90,11 @@ onMounted(() => {
 });
 
 const showErrorFn = (type) => {
-  console.log('=====>',type, props.type);
-  
   if (type === props.type) {
     selected.value = false;
     emits("change", props.type, selected.value);
     showError.value = true;
+    chrome.storage.local.set({ [`${type}Cookie`]: "" });
   }
 };
 const uuLoginClose = (status) => {
@@ -157,14 +155,11 @@ const openSwitch = async (isAgree) => {
     if (c5Cookie) {
       selected.value = true;
       emits("change", props.type, selected.value);
-      validLoginStatus()
+      validLoginStatus();
     } else {
       noCookieRef.value?.show("c5", url);
       selected.value = false;
-    }
-    if (!c5Cookie && !url.includes("c5game.com")) {
-      noCookieRef.value?.show("c5", url);
-      selected.value = false;
+      getCurrentTabCookie();
     }
   }
   if (props.type === "buff") {
@@ -180,15 +175,11 @@ const openSwitch = async (isAgree) => {
     if (buffCookie) {
       selected.value = true;
       emits("change", props.type, selected.value);
-      validLoginStatus()
+      validLoginStatus();
     } else {
       noCookieRef.value?.show("buff", url);
       selected.value = false;
-    }
-
-    if (!buffCookie && !url.includes("buff.163.com")) {
-      noCookieRef.value?.show("buff", url);
-      selected.value = false;
+      getCurrentTabCookie();
     }
   }
 
@@ -204,25 +195,37 @@ const openSwitch = async (isAgree) => {
 
     if (uuCookie) {
       selected.value = true;
-        console.log('uuiiii', uuCookie)
+
       emits("change", props.type, selected.value);
-      validLoginStatus()
+      validLoginStatus();
     } else {
       noCookieRef.value?.show("uu", url);
       selected.value = false;
-    }
-    if (!uuCookie && !url.includes("youpin898.com")) {
-      noCookieRef.value?.show("uu", url);
-      selected.value = false;
+      getCurrentTabCookie();
     }
   }
+};
 
+const getCurrentTabCookie = async () => {
+  let queryOptions = { active: true, lastFocusedWindow: true };
+  // `tab` will either be a `tabs.Tab` instance or `undefined`.
+  let [tab] = await chrome.tabs.query(queryOptions);
+  console.log("tab", tab);
+
+  if (tab) {
+    // 使用 chrome.tabs.sendMessage 发送消息
+
+    chrome.tabs.sendMessage(tab.id, {
+      type: props.type,
+      url: tab.url,
+    });
+  }
 };
 
 const getCookies = async (isAgree) => {
-   setTimeout(() => {
-      openSwitch(isAgree);
-    }, 1000);
+  setTimeout(() => {
+    openSwitch(isAgree);
+  }, 1000);
   // await openSwitch(isAgree);
   // if (!isAgree) {
   let queryOptions = { active: true, lastFocusedWindow: true };
@@ -286,23 +289,18 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
         messageSwitchRef.value?.show("warning", "请登录后，重新打开插件");
         return;
       }
-  
     }
     if (message.data === "buff" && props.type === "buff") {
       if (url.includes("buff.163.com")) {
         messageSwitchRef.value?.show("warning", "请登录后，重新打开插件");
         return;
       }
-
- 
     }
     if (message.data === "uu" && props.type === "uu") {
       if (url.includes("www.youpin898.com")) {
         messageSwitchRef.value?.show("warning", "请登录后，重新打开插件");
         return;
       }
-
-    
     }
 
     return;
@@ -316,7 +314,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
       if (userId) {
         chrome.storage.local.set({ c5user: userId });
       }
-    }else if (message.type === "buffCookie") {
+    } else if (message.type === "buffCookie") {
       const res = await fetch(
         "https://buff.163.com/account/api/user/info/v2?meta_list=is_premium&_=" +
           new Date().getTime(),
@@ -332,30 +330,32 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
       if (useId) {
         chrome.storage.local.set({ buffuser: useId });
       }
-    }else if (message.type === "uuCookie") {
-      // console.log("UU的消息", message);
+    } else if (message.type === "uuCookie") {
+      console.log("UU的消息", message);
       const store = JSON.parse(message?.store || "{}");
       const SteamId = store?.SteamId;
       const UserId = store?.UserId;
       if (SteamId) {
         chrome.storage.local.set({ uuSteamId: SteamId });
         chrome.storage.local.set({ uuuser: UserId });
-      }else {
+      } else {
         messageSwitchRef.value?.show("warning", "当前悠悠有品账号未绑定Steam");
-        selected.value = false;
-        return;
+        // selected.value = false;
       }
-
     }
-
     chrome.storage.local.set({ [message.type]: message.data }, function () {
-      validLoginStatus();
+      // selected.value = true
+      if (message.type.includes(props.type)) {
+        selected.value = true;
+      }
+      // validLoginStatus();
     });
   }
 });
 
 // 校验登录态
 const validLoginStatus = async () => {
+ 
   const { switchLocal } = await chrome.storage.local.get(["switchLocal"]);
   const keys = switchLocal ? Object.keys(switchLocal) : [];
   const url = await getURL();
@@ -377,7 +377,7 @@ const validLoginStatus = async () => {
           const [key, value] = item.split("=");
           c5CookieObj[key.trim()] = value;
         });
-        getC5Data(c5CookieObj["NC5_accessToken"], showErrorFn);
+        await getC5Data(c5CookieObj["NC5_accessToken"], showErrorFn);
       }
       if (key === "uu") {
         const { uuCookie } = await chrome.storage.local.get(["uuCookie"]);
@@ -393,8 +393,8 @@ const validLoginStatus = async () => {
           const [key, value] = item.split("=");
           uuCookieObj[key.trim()] = value;
         });
-        console.log('uuCookieObj', uuCookieObj["uu_token"])
-        getUUData(uuCookieObj["uu_token"], showErrorFn);
+
+        await getUUData(uuCookieObj["uu_token"], showErrorFn);
       }
       if (key === "buff") {
         const { buffCookie } = await chrome.storage.local.get(["buffCookie"]);
@@ -403,12 +403,14 @@ const validLoginStatus = async () => {
           selected.value = false;
           return;
         }
-        getBuffData(buffCookie, showErrorFn);
+        await getBuffData(buffCookie, showErrorFn);
       }
     }
-  
     selected.value = true;
     emits("change", props.type, selected.value);
+  });
+
+  if (keys.length > 0 && keys.includes(props.type)) {
     chrome.notifications.create(
       {
         type: "basic",
@@ -418,14 +420,8 @@ const validLoginStatus = async () => {
       },
       (notificationId) => {}
     );
-  });
+  }
 };
-// watch(
-//   () => selected.value,
-//   () => {
-//     showError.value = false;
-//   }
-// );
 
 const refreshStatus = () => {
   chrome.storage.local.get(["switchLocal"], (data) => {

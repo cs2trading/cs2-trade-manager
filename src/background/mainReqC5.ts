@@ -201,7 +201,7 @@ const formatC5Data = async (
         compareIsUpload(
           orderType === 2 ? "c5Sell" : "c5Buy",
           list[list.length - 1].orderCreateTime,
-          list[0].orderCreateTime,
+        
           page,
           stagePage
         ).then((p) => {

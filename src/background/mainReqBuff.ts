@@ -1,12 +1,11 @@
-import { getUk, randomString2 } from "../common/utils/index.ts";
+
 import {
   genetate90date,
-  updateNear90Date,
   compareIsUpload,
   isMoreThan3Month,
   setUploadComplete,
 } from "./date.ts";
-import { flags, errorCb, getRecordPage } from "./utilsNew.ts";
+import { flags, getRecordPage } from "./utilsNew.ts";
 import { Pause } from "./interfaceUtils.ts";
 import {
   uploadDataToServer,
@@ -18,7 +17,7 @@ import {
 const intervalTimeList = 5000; // 列表5S
 const intervalTimeDetail = 3000; // 详情3S
 
-export const getBuffSellData = async (cookie, page) => {
+export const getBuffSellData = async (cookie:string, page:number) => {
   const pause = await Pause();
   if (pause) return;
   if (page === 1) {
@@ -36,7 +35,8 @@ export const getBuffSellData = async (cookie, page) => {
 
 };
 
-export const getBuffData = async (cookie, page) => {
+export const getBuffData = async (cookie:string, page:number) => {
+
   const pause = await Pause();
   if (pause) return;
   if (page === 1) {
@@ -54,7 +54,7 @@ export const getBuffData = async (cookie, page) => {
 };
 
 
-const formatBuffData = async (allData, page, orderType, cookie) => {
+const formatBuffData = async (allData:any, page:number, orderType:number, cookie:string) => {
   const pause = await Pause();
   if (pause) return;
   // 从allData中解构出data
@@ -84,23 +84,23 @@ const formatBuffData = async (allData, page, orderType, cookie) => {
   const validItems =
     orderType === 1
       ? items
-          .filter((item) => item.buyer_steamid)
-          .filter((item) => !isMoreThan3Month(item.created_at))
+          .filter((item:any) => item.buyer_steamid)
+          .filter((item:any) => !isMoreThan3Month(item.created_at))
       : items
-          .filter((item) => item.seller_steamid)
-          .filter((item) => !isMoreThan3Month(item.created_at)); // 如果列表中seller_steamid字段不存在，丢弃该条数据
+          .filter((item:any) => item.seller_steamid)
+          .filter((item:any) => !isMoreThan3Month(item.created_at)); // 如果列表中seller_steamid字段不存在，丢弃该条数据
   // console.log('%c@@@validItems===>', 'color:green;font-size:15px', validItems)
 
   const noNeedDetail = validItems?.filter(
-    (item) => Number(item?.asset_count || "0") <= 4
+    (item:any) => Number(item?.asset_count || "0") <= 4
   );
   const needDetail = validItems?.filter(
-    (item) => Number(item?.asset_count || "0") > 4
+    (item:any) => Number(item?.asset_count || "0") > 4
   );
   // console.log('%c@@@detailList===>', 'color:green;font-size:15px', page, noNeedDetail, needDetail)
   // 整理list数据
-  const uploadData = [];
-  noNeedDetail?.forEach((item) => {
+  const uploadData:any[] = [];
+  noNeedDetail?.forEach((item:any) => {
     const {
       id,
       asset_info,
@@ -108,8 +108,7 @@ const formatBuffData = async (allData, page, orderType, cookie) => {
       goods_id,
       buyer_steamid,
       seller_steamid,
-      order_time,
-      asset_count,
+   
       price,
     } = item;
     if (!isMoreThan3Month(created_at)) {
@@ -146,27 +145,15 @@ const formatBuffData = async (allData, page, orderType, cookie) => {
     );
   }
   for (let item of needDetail) {
-    const {
-      id,
-      asset_info,
-      created_at,
-      goods_id,
-      buyer_steamid,
-      seller_steamid,
-      // real_price,
-      // item_price,
-      order_time,
-      asset_count,
-      price,
-    } = item;
+   
     await new Promise((resolve) => setTimeout(resolve, intervalTimeDetail)); // 等待3秒
-    const detailData = await getBuffDetailApi(item.id, orderType, cookie);
+    const detailData:any = await getBuffDetailApi(item.id, orderType, cookie);
 
     if (!detailData) return;
 
     const { data } = detailData;
-    let detailReqBuff = [];
-    data?.items.forEach((detailItem) => {
+    let detailReqBuff:any[] = [];
+    data?.items.forEach((detailItem:any) => {
       detailReqBuff.push({
         id: detailItem.sell_order_id,
         cookie,
@@ -179,24 +166,22 @@ const formatBuffData = async (allData, page, orderType, cookie) => {
     });
     for (let detailItem of detailReqBuff) {
       await new Promise((resolve) => setTimeout(resolve, intervalTimeDetail)); // 等待3秒
-      const detailList = await getBuffDetailList(detailItem);
+      const detailList:any = await getBuffDetailList(detailItem);
 
-      const collectDetailDataBuff = [];
+      const collectDetailDataBuff:any[] = [];
       if (!detailList) return;
       if (!Array.isArray(detailList)) {
-        const { id, orderType, cookie, steamid } = detailItem;
+        const { id, orderType, steamid } = detailItem;
 
         const {
           items,
           goods_infos,
-          goods_id,
-          asset_info,
-          created_at,
-          user_steamid,
-          // id,
+         
+          created_at
+          
         } = detailList?.data;
-        items.forEach((item) => {
-          const { asset_info, order_time, asset_count } = item;
+        items.forEach((item:any) => {
+          const { asset_info } = item;
           if (!isMoreThan3Month(created_at)) {
             collectDetailDataBuff.push({
               orderId: id,
@@ -240,7 +225,7 @@ const formatBuffData = async (allData, page, orderType, cookie) => {
         compareIsUpload(
           orderType === 2 ? "buffSell" : "buffBuy",
           items[items?.length - 1].created_at,
-          items[0].created_at,
+        
           page,
           stagePage
         ).then((p) => {

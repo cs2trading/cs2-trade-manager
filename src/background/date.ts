@@ -1,5 +1,5 @@
 // 生成一个近90天的日历数据 并更新
-export const genetate90date = async (type) => {
+export const genetate90date = async (type:string) => {
   const nearThreeMonthsDates = gethreeMonthsDay();
   const olderDate = await chrome.storage.local.get([`${type}Date`]); // {20210901:true, 20210902:true, 20210903:true}
   const newDate = compareDate(nearThreeMonthsDates, olderDate[`${type}Date`]);
@@ -17,7 +17,7 @@ export const genetate90date = async (type) => {
   return false;
 };
 
-export const setUploadComplete = async (type) => {
+export const setUploadComplete = async (type:string) => {
   const { cancelFlag } = await chrome.storage.local.get([`cancelFlag`]);
   if (cancelFlag) {
     console.log(type + "全部日期点亮,因已取消而不设置" )
@@ -40,7 +40,7 @@ export const setUploadComplete = async (type) => {
   await chrome.storage.local.set({ [`${type}Date`]: date });
 };
 
-export const updateNear90Date = async (platformType, date) => {
+export const updateNear90Date = async (platformType:string, date:number) => {
   // 已经传完的数据 打标识
   const olderDate = await chrome.storage.local.get([`${platformType}Date`]); // 获取已经存的
   const newDateArr = getDatesFromTimestamp(date); // 是一个日期数组
@@ -54,7 +54,7 @@ export const updateNear90Date = async (platformType, date) => {
   chrome.storage.local.set({ [`${platformType}Date`]: oldDateData });
 };
 
-export const isMoreThan3Month = (timestamp) => {
+export const isMoreThan3Month = (timestamp:number) => {
   const now = new Date(); // 当前时间
   const threeMonthsAgo = new Date(now);
   threeMonthsAgo.setMonth(now.getMonth() - 3); // 设置为3个月前
@@ -68,14 +68,13 @@ export const isMoreThan3Month = (timestamp) => {
 };
 
 export const compareIsUpload = async (
-  type,
-  startDate,
-  endDate,
-  page,
-  stagePage
+  type:string,
+  startDate:number,
+  page:number,
+  stagePage:number
 ) => {
   // 第一个日期 和第二个日期  如果两个日期都是true 说明已经传过了 则需要跳页
-  const nearThreeMonthsDates = gethreeMonthsDay();
+
   const stageDate = await chrome.storage.local.get([`${type}Date`]);
 
   const olderDate = stageDate[`${type}Date`];
@@ -84,7 +83,7 @@ export const compareIsUpload = async (
     return page;
   }
   const startDateStr = timestampToDates(startDate);
-  const endDateStr = timestampToDates(endDate);
+
   const allDate = Object.keys(olderDate);
   allDate.pop()
   const isAllUpload = allDate.every(
@@ -93,7 +92,7 @@ export const compareIsUpload = async (
   if (isAllUpload) {
     return null;
   }
-  // olderDate[startDateStr] &&
+  
   if (olderDate[startDateStr]) {
     // 说明数据已经上传完了的
     return stagePage;
@@ -102,7 +101,7 @@ export const compareIsUpload = async (
 };
 
 // 内部函数
-function timestampToDates(timestamp) {
+function timestampToDates(timestamp:number) {
   if (String(timestamp).length === 10) {
     timestamp = timestamp * 1000;
   }
@@ -114,7 +113,7 @@ function timestampToDates(timestamp) {
  * @param {number} timestamp - 输入的时间戳（毫秒）
  * @returns {string[]} 日期数组，格式如 ['20250620', '20250619', ...]
  */
-function getDatesFromTimestamp(timestamp) {
+function getDatesFromTimestamp(timestamp:number) {
   if (String(timestamp).length !== 13) {
     timestamp = timestamp * 1000;
   }
@@ -130,7 +129,7 @@ function getDatesFromTimestamp(timestamp) {
   let currentDate = new Date(startDate);
 
   // 格式化日期为 YYYYMMDD
-  function formatDate(date) {
+  function formatDate(date:Date) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
@@ -143,13 +142,13 @@ function getDatesFromTimestamp(timestamp) {
   }
   result.shift();
   result = result.filter((item) => item !== formatDate(new Date()));
-  // console.log('%c@@@updateNear90Date===>', 'color:green;font-size:15px', result)
   return result;
 }
 // newDate 数组
 // oldDate 对象
-function compareDate(newDate, oldDate) {
-  const newDateObj = {};
+function compareDate(newDate:number[]|string[], oldDate:any) {
+
+  const newDateObj:{[key:string]:boolean} = {};
   oldDate = oldDate || {};
   newDate.forEach((item) => {
     newDateObj[item] = oldDate[item] ? true : false;
@@ -173,7 +172,8 @@ function getLastThreeMonthsDates() {
   return result;
 }
 
-function formatDate(date) {
+function formatDate(date:Date) {
+
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
