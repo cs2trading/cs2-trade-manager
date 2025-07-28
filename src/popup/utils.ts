@@ -181,7 +181,7 @@ export const getBuffData = async (cookie, errorCb) => {
     
   } catch (error) {
     
-      console.log("错误");
+    console.log("错误");
     errorCb("buff");
   }
 };
@@ -234,6 +234,10 @@ export const getUUData = async (cookie, errorCb) => {
       }
     );
     const data = await res.json();
+    console.log('UU=data', data)
+    if(data.code === 84101){
+      errorCb("uu");
+    }
     // const {
     //   data: { total },
     // } = data;

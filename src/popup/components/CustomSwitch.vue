@@ -19,7 +19,7 @@
       padding-right: 20px;
     "
   >
-    登录信息失效或获取数据失败，请<span
+    登录失效或获取数据失败，请<span
       style="color: #8355ff; text-decoration: underline; cursor: pointer"
       @click="reLoginNoValid"
       >重新登录</span
@@ -72,11 +72,7 @@ const uploading = ref(false);
 watch(
   () => [props.isUploading, props.cancelTimerNum],
   (newVal, oldVal) => {
-    console.log(
-      "%c@@@props.isUploading===>",
-      "color:green;font-size:15px",
-      props.isUploading
-    );
+  
     if (
       (!props.isUploading && props.cancelTimerNum < 10) ||
       props.isUploading
@@ -95,6 +91,8 @@ onMounted(() => {
 });
 
 const showErrorFn = (type) => {
+  console.log('=====>',type, props.type);
+  
   if (type === props.type) {
     selected.value = false;
     emits("change", props.type, selected.value);
@@ -159,6 +157,7 @@ const openSwitch = async (isAgree) => {
     if (c5Cookie) {
       selected.value = true;
       emits("change", props.type, selected.value);
+      validLoginStatus()
     } else {
       noCookieRef.value?.show("c5", url);
       selected.value = false;
@@ -181,6 +180,7 @@ const openSwitch = async (isAgree) => {
     if (buffCookie) {
       selected.value = true;
       emits("change", props.type, selected.value);
+      validLoginStatus()
     } else {
       noCookieRef.value?.show("buff", url);
       selected.value = false;
@@ -204,7 +204,9 @@ const openSwitch = async (isAgree) => {
 
     if (uuCookie) {
       selected.value = true;
+        console.log('uuiiii', uuCookie)
       emits("change", props.type, selected.value);
+      validLoginStatus()
     } else {
       noCookieRef.value?.show("uu", url);
       selected.value = false;
@@ -214,9 +216,7 @@ const openSwitch = async (isAgree) => {
       selected.value = false;
     }
   }
-  // if (isAgree && props.type === "uu") {
-  //   uuLoginRef.value?.show();
-  // }
+
 };
 
 const getCookies = async (isAgree) => {
@@ -256,6 +256,7 @@ async function toggleSwitch() {
   if (uploading.value) {
     return;
   }
+  showError.value = false; // 关闭错误信息
   if (selected.value) {
     selected.value = false; // 关闭
     emits("change", props.type, selected.value);
@@ -332,7 +333,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
         chrome.storage.local.set({ buffuser: useId });
       }
     }else if (message.type === "uuCookie") {
-      console.log("UU的消息", message);
+      // console.log("UU的消息", message);
       const store = JSON.parse(message?.store || "{}");
       const SteamId = store?.SteamId;
       const UserId = store?.UserId;
@@ -341,6 +342,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
         chrome.storage.local.set({ uuuser: UserId });
       }else {
         messageSwitchRef.value?.show("warning", "当前悠悠有品账号未绑定Steam");
+        selected.value = false;
         return;
       }
 
@@ -391,15 +393,7 @@ const validLoginStatus = async () => {
           const [key, value] = item.split("=");
           uuCookieObj[key.trim()] = value;
         });
-
-        // const cookieArr = uuCookie?.split("=");
-        // console.log(
-        //   "%获取的Cookie",
-        //   "color:green;font-size:15px",
-        //   uuCookie,
-        //   cookieArr
-        // );
-
+        console.log('uuCookieObj', uuCookieObj["uu_token"])
         getUUData(uuCookieObj["uu_token"], showErrorFn);
       }
       if (key === "buff") {
@@ -412,6 +406,7 @@ const validLoginStatus = async () => {
         getBuffData(buffCookie, showErrorFn);
       }
     }
+  
     selected.value = true;
     emits("change", props.type, selected.value);
     chrome.notifications.create(
@@ -425,12 +420,12 @@ const validLoginStatus = async () => {
     );
   });
 };
-watch(
-  () => selected.value,
-  () => {
-    showError.value = false;
-  }
-);
+// watch(
+//   () => selected.value,
+//   () => {
+//     showError.value = false;
+//   }
+// );
 
 const refreshStatus = () => {
   chrome.storage.local.get(["switchLocal"], (data) => {
