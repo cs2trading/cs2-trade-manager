@@ -1,5 +1,5 @@
 import { BASE_URL, pkg } from "./const";
-import {updateRecordDate, updateRecordPage, flags, errorCb} from "./utilsNew";
+import { updateRecordDate, updateRecordPage, flags, errorCb } from "./utilsNew";
 import { Pause } from "./interfaceUtils.ts";
 import { isMoreThan3Month } from "./date.ts";
 import { getUk, randomString2 } from "../common/utils/index.ts";
@@ -7,7 +7,7 @@ import { getUk, randomString2 } from "../common/utils/index.ts";
 const uploadMaxNum = 100; // 一次上传的最大数量
 // 异步函数，用于发送请求并重试
 
-async function handlePlatformError(url, options, retries) {
+async function handlePlatformError(url: string, options: any, retries: number) {
   console.warn(
     `Request failed. Retrying in 1 minute... (Remaining retries: ${
       retries - 1
@@ -17,10 +17,10 @@ async function handlePlatformError(url, options, retries) {
   const raceRs = Promise.race([
     new Promise((resolve) => setTimeout(resolve, 60000)), // 等待 1 分钟
     new Promise((resolve, reject) => {
-      let timer = setInterval(() => {
+      let timer:number | null = setInterval(() => {
         Pause().then((res) => {
           if (res) {
-            clearInterval(timer);
+            clearInterval(timer as number);
             timer = null;
             resolve({ customError: "canceled" });
           }
@@ -29,14 +29,14 @@ async function handlePlatformError(url, options, retries) {
     }),
   ]);
 
-  let rsData = await raceRs;
+  let rsData:any = await raceRs;
   if (rsData?.customError) {
     options?.resolve && options?.resolve(rsData);
     return rsData;
   }
   return null;
 }
-async function fetchWithRetry(url, options = {}, retries = 3) {
+async function fetchWithRetry(url: string, options={} as any, retries = 3) {
   const pause = await Pause();
   if (pause) {
     return { customError: "canceled" };
@@ -61,12 +61,12 @@ async function fetchWithRetry(url, options = {}, retries = 3) {
             return res;
           }
           return fetchWithRetry(url, options, retries - 1);
-        }else {
-          return { customError: "error"  };
+        } else {
+          return { customError: "error" };
         }
       }
       // UU 特殊款式
-    }else if (url.includes("/commodity/Commodity/Detail")) {
+    } else if (url.includes("/commodity/Commodity/Detail")) {
       if (!resData?.Data) {
         if (retries > 1) {
           const res = await handlePlatformError(url, options, retries);
@@ -74,12 +74,12 @@ async function fetchWithRetry(url, options = {}, retries = 3) {
             return res;
           }
           return fetchWithRetry(url, options, retries - 1);
-        }else {
-          return { customError: "error"  };
+        } else {
+          return { customError: "error" };
         }
       }
       // Buff 详情
-    }else if (url.includes("/bundle_overview")) {
+    } else if (url.includes("/bundle_overview")) {
       if (!resData?.data) {
         // 不存在
         if (retries > 1) {
@@ -88,16 +88,16 @@ async function fetchWithRetry(url, options = {}, retries = 3) {
             return res;
           }
           return fetchWithRetry(url, options, retries - 1);
-        }else {
-          return { customError: "error"  };
+        } else {
+          return { customError: "error" };
         }
       }
       // Buff的 出售&购买列表以及用id获取一条数据的
-    }else if (url.includes("/history")) {
+    } else if (url.includes("/history")) {
       //
       const items = resData?.data?.items;
 
-      console.log("history items：",items)
+      console.log("history items：", items);
       // 如果响应数据不是数组，则重试
       if (!Array.isArray(items)) {
         if (retries > 1) {
@@ -107,15 +107,15 @@ async function fetchWithRetry(url, options = {}, retries = 3) {
           }
 
           return fetchWithRetry(url, options, retries - 1);
-        }else {
-          return { customError: "error"  };
+        } else {
+          return { customError: "error" };
         }
       }
       // UU 出售&购买列表
-    }else if (url.includes("v1/sell/list") || url.includes("v1/buy/list")) {
-      console.log('%c@@@/sell/list===>', 'color:red;font-size:15px', resData)
-      if(resData.code === 84101){
-        return { customError: "error"  };
+    } else if (url.includes("v1/sell/list") || url.includes("v1/buy/list")) {
+      console.log("%c@@@/sell/list===>", "color:red;font-size:15px", resData);
+      if (resData.code === 84101) {
+        return { customError: "error" };
       }
       // 悠悠的列表
       const orderList = resData?.data?.orderList;
@@ -128,13 +128,17 @@ async function fetchWithRetry(url, options = {}, retries = 3) {
           }
 
           return fetchWithRetry(url, options, retries - 1);
-        }else {
-          return { customError: "error"  };
+        } else {
+          return { customError: "error" };
         }
       }
       // 是我们的接口 0为正常 50001为版本升级 其他的报错均有问题
-    }else if (url.includes(BASE_URL) && resData.errorCode !== 0 && resData.errorCode !== 50001 ) {
-      console.log("上传报错",resData.errorCode)
+    } else if (
+      url.includes(BASE_URL) &&
+      resData.errorCode !== 0 &&
+      resData.errorCode !== 50001
+    ) {
+      console.log("上传报错", resData.errorCode);
       if (retries > 1) {
         const res = await handlePlatformError(url, options, retries);
         if (res) {
@@ -142,8 +146,8 @@ async function fetchWithRetry(url, options = {}, retries = 3) {
         }
 
         return fetchWithRetry(url, options, retries - 1);
-      }else {
-        return { customError: "error"  };
+      } else {
+        return { customError: "error" };
       }
     }
     // 如果options中包含resolve函数，则调用resolve函数
@@ -160,12 +164,12 @@ async function fetchWithRetry(url, options = {}, retries = 3) {
       await new Promise((resolve) => setTimeout(resolve, 60000)); // 等待 1 分钟
       return fetchWithRetry(url, options, retries - 1);
     } else {
-      return { customError: "error"  };
+      return { customError: "error" };
     }
   }
 }
 
-export const splitArrayIntoChunks = (arr, chunkSize = 100) => {
+export const splitArrayIntoChunks = (arr: any, chunkSize = 100) => {
   if (!Array.isArray(arr)) {
     throw new TypeError("第一个参数必须是一个数组");
   }
@@ -177,51 +181,37 @@ export const splitArrayIntoChunks = (arr, chunkSize = 100) => {
 };
 
 export const uploadDataToServer = async (
-  data,
-  page,
-  orderType,
-  platform,
-  isEnd
+  data:any,
+  page:number,
+  orderType:number,
+  platform:number,
+  isEnd:boolean
 ) => {
- 
   if (data.length < 1) {
     return;
   }
   if (data.length <= uploadMaxNum) {
-    await upload100toServer(
-      [data],
-      page,
-      orderType,
-      platform,
-      isEnd
-    );
+    await upload100toServer([data], page, orderType, platform);
   } else {
     const uplist = splitArrayIntoChunks(data);
-     await upload100toServer(
-      uplist,
-      page,
-      orderType,
-      platform,
-      isEnd
-    );
+    await upload100toServer(uplist, page, orderType, platform);
   }
   await updateRecordPage(page, orderType, platform, isEnd); // 更新页码
 };
 
-const upload100toServer = async (uplist, page, orderType, platform, isEnd) => {
+const upload100toServer = async (
+  uplist: any[],
+  page: number,
+  orderType: number,
+  platform: number
+) => {
   const num = uplist.length;
   if (num === 1) {
-    await uploadApi(
-      uplist[0],
-      page,
-      orderType,
-      platform,
-      true
-    );
+    await uploadApi(uplist[0], page, orderType, platform, true);
   } else {
     return await new Promise((resolve) => {
       let index = 0;
-      let timer = setInterval(async () => {
+      let timer: number | null = setInterval(async () => {
         await uploadApi(
           uplist[index],
           page,
@@ -230,9 +220,9 @@ const upload100toServer = async (uplist, page, orderType, platform, isEnd) => {
           index === num - 1
         );
         if (index === num - 1) {
-          clearInterval(timer);
+          clearInterval(timer as number);
           timer = null;
-          resolve();
+          resolve("");
         } else {
           index++;
         }
@@ -241,7 +231,13 @@ const upload100toServer = async (uplist, page, orderType, platform, isEnd) => {
   }
 };
 
-const uploadApi = async (params, page, orderType, platform, isRecord) => {
+const uploadApi = async (
+  params: any,
+  page: number,
+  orderType: number,
+  platform: number,
+  isRecord: boolean
+) => {
   return new Promise(async (resolve, reject) => {
     const res = fetchWithRetry(
       `${BASE_URL}/reptile/inventory/v1/third-trade/batch`,
@@ -259,7 +255,7 @@ const uploadApi = async (params, page, orderType, platform, isRecord) => {
       }
     );
     res.then(async (res) => {
-      exceptionHandlingAll( res)
+      exceptionHandlingAll(res);
       const uploadRes = res;
 
       if (uploadRes?.errorCode === 50001) {
@@ -282,17 +278,8 @@ const uploadApi = async (params, page, orderType, platform, isRecord) => {
         `%c${platform}_${orderType}  上传数据  ${params.length}条`,
         "color:green;font-size:15px"
       );
-      resolve();
+      resolve(null);
     });
-
-    // .catch((err) => {
-    //   const platformFlag = `${platform}Sell`;
-    //   const platformFlag1 = `${platform}Buy`;
-    //   flags[platformFlag] = 100; // 标记完成
-    //   flags[platformFlag1] = 100; // 标记完成
-
-    //   console.log("上传失败", err);
-    // });
   });
 };
 
@@ -300,18 +287,21 @@ export const getSpecialList = async () => {
   const res = await fetchWithRetry(
     `${BASE_URL}/common/config/v1/special-styles/short-names`
   );
-  exceptionHandlingAll( res)
+  exceptionHandlingAll(res);
   const { data } = res;
   return data;
 };
 
-export const getC5SellApi = async (cookie: string, page: number,status:number = 3) => {
-
+export const getC5SellApi = async (
+  cookie: string,
+  page: number,
+  status: number = 3
+) => {
   return await new Promise(async (resolve) => {
     const params = new URLSearchParams({
       page: page.toString(),
-      limit: '70',
-      appId: '730',
+      limit: "70",
+      appId: "730",
       status: status.toString(),
       type: "",
       keyword: "",
@@ -328,20 +318,22 @@ export const getC5SellApi = async (cookie: string, page: number,status:number = 
         resolve,
       }
     );
-    exceptionHandlingC5( allData)
+    exceptionHandlingC5(allData);
     resolve(allData.data);
     return allData.data;
   });
 };
 
-export const getC5BuyApi = async (cookie: string, page: number,status:number = 3) => {
-
-
+export const getC5BuyApi = async (
+  cookie: string,
+  page: number,
+  status: number = 3
+) => {
   return await new Promise(async (resolve) => {
     const params = new URLSearchParams({
       page: page.toString(),
-      limit: '70',
-      appId: '730',
+      limit: "70",
+      appId: "730",
       status: status.toString(),
       type: "",
       keyword: "",
@@ -360,17 +352,13 @@ export const getC5BuyApi = async (cookie: string, page: number,status:number = 3
         resolve,
       }
     );
-    exceptionHandlingC5( allData)
+    exceptionHandlingC5(allData);
     resolve(allData.data);
     return allData.data;
   });
 };
 
-export const getC5DetailApi = async ({
-  orderId,
-  orderType,
-  cookie
-}) => {
+export const getC5DetailApi = async ({ orderId, orderType, cookie }: { orderId: string, orderType: number, cookie: string }) => {
   return await new Promise(async (resolve) => {
     const typeStr = orderType === 1 ? "buyer-order" : "seller-order"; // 1 买入  2 售出
 
@@ -386,7 +374,7 @@ export const getC5DetailApi = async ({
       },
       resolve,
     });
-    exceptionHandlingC5( data)
+    exceptionHandlingC5(data);
     const itemList = data?.data?.orderInfo?.orderAssetList;
     console.log("C5订单详情", itemList);
     resolve(itemList);
@@ -397,11 +385,11 @@ export const getC5DetailApi = async ({
 export const getBuffSellApi = async (cookie: string, page: number) => {
   return await new Promise(async (resolve) => {
     const params = new URLSearchParams({
-      page_num: page,
-      page_size: 24,
+      page_num: page.toString(),
+      page_size: '24',
       state: "success",
       game: "csgo",
-      appid: 730,
+      appid: '730',
     });
 
     const allData = await fetchWithRetry(
@@ -415,8 +403,8 @@ export const getBuffSellApi = async (cookie: string, page: number) => {
         resolve,
       }
     );
-    console.log("BUFF - history：allData",allData)
-    exceptionHandlingBuff( allData)
+    console.log("BUFF - history：allData", allData);
+    exceptionHandlingBuff(allData);
     resolve(allData);
     return allData;
   });
@@ -425,11 +413,11 @@ export const getBuffSellApi = async (cookie: string, page: number) => {
 export const getBuffApi = async (cookie: string, page: number) => {
   return await new Promise(async (resolve) => {
     const params = new URLSearchParams({
-      page_num: page,
-      page_size: 24,
+      page_num: page.toString(),
+      page_size: '24',
       state: "success",
       game: "csgo",
-      appid: 730,
+      appid: '730'
     });
     const allData = await fetchWithRetry(
       `https://buff.163.com/api/market/buy_order/history?${params}`,
@@ -442,13 +430,17 @@ export const getBuffApi = async (cookie: string, page: number) => {
         resolve,
       }
     );
-    exceptionHandlingBuff( allData)
+    exceptionHandlingBuff(allData);
     resolve(allData);
     return allData;
   });
 };
 
-export const getBuffDetailApi = async (id, type, cookie) => {
+export const getBuffDetailApi = async (
+  id: string,
+  type: number,
+  cookie: string
+) => {
   const pause = await Pause();
   if (pause) return;
   return await new Promise(async (resolve) => {
@@ -465,13 +457,13 @@ export const getBuffDetailApi = async (id, type, cookie) => {
         resolve,
       }
     );
-    exceptionHandlingBuff( detailData)
+    exceptionHandlingBuff(detailData);
     resolve(detailData);
     return detailData;
   });
 };
 
-export const getBuffDetailList = async (param) => {
+export const getBuffDetailList = async (param: any) => {
   const pause = await Pause();
   if (pause) return;
   return await new Promise(async (resolve) => {
@@ -487,19 +479,15 @@ export const getBuffDetailList = async (param) => {
         resolve,
       }
     );
-    exceptionHandlingBuff( detailListRes)
-    const collectDetailDataBuff = [];
+    exceptionHandlingBuff(detailListRes);
+    const collectDetailDataBuff:any[] = [];
     const {
       items,
       goods_infos,
-      goods_id,
-      asset_info,
-      created_at,
-      user_steamid,
-      // id,
+      created_at
     } = detailListRes?.data;
-    items.forEach((item) => {
-      const { asset_info, order_time, asset_count } = item;
+    items.forEach((item:any) => {
+      const { asset_info } = item;
       if (!isMoreThan3Month(created_at)) {
         collectDetailDataBuff.push({
           orderId: id,
@@ -584,7 +572,7 @@ export const getUUSellDataApi = async (cookie: string, page: number) => {
         resolve,
       }
     );
-    exceptionHandlingUu( dataSell)
+    exceptionHandlingUu(dataSell);
     resolve(dataSell);
     return dataSell;
   });
@@ -637,13 +625,13 @@ export const getUUBuyDataApi = async (cookie: string, page: number) => {
         resolve,
       }
     );
-    exceptionHandlingUu( data)
+    exceptionHandlingUu(data);
     resolve(data);
     return data;
   });
 };
 
-export const getUUSpeicalStyle = async (id, cookie) => {
+export const getUUSpeicalStyle = async (id: string, cookie: string) => {
   const pause = await Pause();
   if (pause) return;
   return await new Promise(async (resolve) => {
@@ -659,7 +647,7 @@ export const getUUSpeicalStyle = async (id, cookie) => {
         resolve,
       }
     );
-    exceptionHandlingUu( data)
+    exceptionHandlingUu(data);
     const Data = data.Data;
 
     resolve(Data?.DopplerName || Data?.HardenedName);
@@ -667,7 +655,13 @@ export const getUUSpeicalStyle = async (id, cookie) => {
   });
 };
 
-export const getUUDetail = async ({ cookie, orderNo, userId, orderType }) => {
+export const getUUDetail = async ({
+  cookie,
+  orderNo,
+}: {
+  cookie: string;
+  orderNo: string;
+}) => {
   const pause = await Pause();
   if (pause) return;
   return await new Promise(async (resolve) => {
@@ -707,19 +701,19 @@ export const getUUDetail = async ({ cookie, orderNo, userId, orderType }) => {
         headers: headers,
         body: JSON.stringify({
           orderNo,
-          userId,
+          userId: "",
           Sessionid: randomString2,
         }),
         resolve,
       }
     );
-    exceptionHandlingUu( data)
+    exceptionHandlingUu(data);
     resolve(data);
     return data;
   });
 };
 
-function exceptionHandlingC5(data) {
+function exceptionHandlingC5(data: any) {
   if (data?.customError) {
     flags.c5Sell = 100; // 标记完成
     flags.c5Buy = 100; // 标记完成
@@ -727,13 +721,14 @@ function exceptionHandlingC5(data) {
       errorCb("c5");
     }
     if (data.customError === "canceled") {
-      chrome.storage.local.set({cancelFlag: "true"});
+      chrome.storage.local.set({ cancelFlag: "true" });
     }
-    throw new Error("c5停止上传",data);
+    console.error(data);
+    throw new Error("c5停止上传");
   }
 }
 
-function exceptionHandlingBuff(data) {
+function exceptionHandlingBuff(data: any) {
   if (data?.customError) {
     flags.buffSell = 100; // 标记完成
     flags.buffBuy = 100; // 标记完成
@@ -741,13 +736,14 @@ function exceptionHandlingBuff(data) {
       errorCb("buff");
     }
     if (data.customError === "canceled") {
-      chrome.storage.local.set({cancelFlag: "true"});
+      chrome.storage.local.set({ cancelFlag: "true" });
     }
-    throw new Error("buff停止上传,",data);
+    console.error(data);
+    throw new Error("buff停止上传,");
   }
 }
 
-function exceptionHandlingUu(data) {
+function exceptionHandlingUu(data: any) {
   if (data?.customError) {
     flags.uuSell = 100; // 标记完成
     flags.uuBuy = 100; // 标记完成
@@ -755,21 +751,23 @@ function exceptionHandlingUu(data) {
       errorCb("uu");
     }
     if (data.customError === "canceled") {
-      chrome.storage.local.set({cancelFlag: "true"});
+      chrome.storage.local.set({ cancelFlag: "true" });
     }
-    throw new Error("uu停止上传",data);
+    console.error(data);
+    throw new Error("uu停止上传");
   }
 }
 
-function exceptionHandlingAll(data) {
+function exceptionHandlingAll(data: any) {
   if (data?.customError) {
-    chrome.storage.local.set({cancelFlag: "true"});
+    chrome.storage.local.set({ cancelFlag: "true" });
     flags.c5Sell = 100; // 标记完成
     flags.c5Buy = 100; // 标记完成
     flags.buffSell = 100; // 标记完成
     flags.buffBuy = 100; // 标记完成
     flags.uuSell = 100; // 标记完成
     flags.uuBuy = 100; // 标记完成
-    throw new Error("全部停止上传",data);
+    console.error(data);
+    throw new Error("全部停止上传");
   }
 }

@@ -1,12 +1,10 @@
-import { getUk, randomString2 } from "../common/utils/index.ts";
 import {
   genetate90date,
-  updateNear90Date,
   compareIsUpload,
   isMoreThan3Month,
   setUploadComplete,
 } from "./date.ts";
-import { flags, errorCb, getRecordPage } from "./utilsNew.ts";
+import { flags, getRecordPage } from "./utilsNew.ts";
 import { Pause } from "./interfaceUtils.ts";
 import {
   getUUSellDataApi,
@@ -19,9 +17,9 @@ import {
 const intervalTimeList = 5000; // 列表5S
 const intervalTimeDetail = 3000; // 详情3S
 
-let uUspecialList = [];
+let uUspecialList: any[] = [];
 
-export const getUUSellData = async (cookie, page) => {
+export const getUUSellData = async (cookie: string, page: number) => {
   const pause = await Pause();
   if (pause) return;
   if (page === 1) {
@@ -35,14 +33,13 @@ export const getUUSellData = async (cookie, page) => {
       return;
     }
   }
-    // 出售记录
-    await new Promise((resolve) => setTimeout(resolve, intervalTimeDetail));
-    const dataSell = await getUUSellDataApi(cookie, page);
-    await formatUUData(dataSell, page, 2, cookie); // 整理数据 并上传
-
+  // 出售记录
+  await new Promise((resolve) => setTimeout(resolve, intervalTimeDetail));
+  const dataSell = await getUUSellDataApi(cookie, page);
+  await formatUUData(dataSell, page, 2, cookie); // 整理数据 并上传
 };
 
-export const getUUData = async (cookie, page) => {
+export const getUUData = async (cookie: string, page: number) => {
   const pause = await Pause();
   if (pause) return;
   if (page === 1) {
@@ -54,47 +51,38 @@ export const getUUData = async (cookie, page) => {
     }
   }
 
-    // 请求接口  购买记录
-    await new Promise((resolve) => setTimeout(resolve, intervalTimeDetail));
-    const data = await getUUBuyDataApi(cookie, page);
+  // 请求接口  购买记录
+  await new Promise((resolve) => setTimeout(resolve, intervalTimeDetail));
+  const data = await getUUBuyDataApi(cookie, page);
 
-    await formatUUData(data, page, 1, cookie);
+  await formatUUData(data, page, 1, cookie);
 };
 
-
-const formatUUData = async (allData, page, orderType, cookie) => {
+const formatUUData = async (
+  allData: any,
+  page: number,
+  orderType: number,
+  cookie: string
+) => {
   const pause = await Pause();
   if (pause) return;
-
   const {
     data: { orderList },
   } = allData;
-
   const uploadData = [];
-
-  const detailReq = [];
-
   const { uuSteamId } = await chrome.storage.local.get([`uuSteamId`]);
-  let num = 0;
   // 调试
   // chrome.storage.local.set({ [`UU_${orderType}_Page_${page}`]: orderList });
-  const needDetail = orderList?.filter((item) => item.commodityNum > 3);
-  const noNeedDetail = orderList?.filter((item) => item.commodityNum <= 3);
+  const needDetail = orderList?.filter((item: any) => item.commodityNum > 3);
+  const noNeedDetail = orderList?.filter((item: any) => item.commodityNum <= 3);
   console.log(
     "%c@@@needDetail===>",
     "color:green;font-size:15px",
     needDetail,
     noNeedDetail
   );
-
   for (let item of noNeedDetail) {
-    const {
-      productDetailList,
-      commodityNum,
-      orderNo,
-      buyerUserId,
-      createOrderTime,
-    } = item;
+    const { productDetailList } = item;
     for (let productDetail of productDetailList) {
       const {
         orderDetailNo,
@@ -108,11 +96,9 @@ const formatUUData = async (allData, page, orderType, cookie) => {
         fadeNumber,
         commodityTemplateId,
         commodityName,
-        sellerSteamId,
         isDoppler,
         dopplerName,
         commodityId,
-        orderNo,
         // 定义一个特殊样式变量
       } = productDetail;
       // 如果不是多普勒，并且uUspecialList中包含commodityHashName
@@ -124,9 +110,8 @@ const formatUUData = async (allData, page, orderType, cookie) => {
         // 不是多普勒
         await new Promise((resolve) => setTimeout(resolve, intervalTimeDetail)); // 等待3秒
         //   获取特殊样式
-        const res  = await getUUSpeicalStyle(commodityId, cookie);
-        specialStyle = res.Data?.DopplerName || res?.Data?.HardenedName
-
+        const res: any = await getUUSpeicalStyle(commodityId, cookie);
+        specialStyle = res.Data?.DopplerName || res?.Data?.HardenedName;
       }
       if (!isMoreThan3Month(createOrderTime)) {
         uploadData.push({
@@ -159,26 +144,19 @@ const formatUUData = async (allData, page, orderType, cookie) => {
       "uu",
       orderList?.length < 20
     );
-
   }
   for (let item of needDetail) {
     // 需要详情
-    const {
-      productDetailList,
-      commodityNum,
-      orderNo,
-      buyerUserId,
-      createOrderTime,
-    } = item;
+    const { productDetailList, orderNo, buyerUserId, createOrderTime } = item;
     const detailParams = {
       cookie,
       orderNo,
       buyerUserId,
       productDetailList,
       orderType,
-      steamId:uuSteamId,
+      steamId: uuSteamId,
       uUspecialList,
-      createOrderTime,
+      createOrderTime
     };
     if (!isMoreThan3Month(createOrderTime)) {
       await new Promise((resolve) => setTimeout(resolve, intervalTimeDetail)); // 等待3秒
@@ -189,8 +167,8 @@ const formatUUData = async (allData, page, orderType, cookie) => {
         detailParams,
         page,
         orderType,
-        "uu",
-        orderList?.length < 20
+        orderList?.length < 20,
+        cookie
       );
     }
   }
@@ -205,37 +183,36 @@ const formatUUData = async (allData, page, orderType, cookie) => {
     orderList?.length === 20 &&
     !isMoreThan3Month(orderList?.[orderList.length - 1].createOrderTime)
   ) {
-   await new Promise((resolve) => setTimeout(resolve, intervalTimeList)); // 等待5秒
-      getRecordPage("uuuser", orderType === 1 ? "buy" : "sell").then(
-        (stagePage) => {
-          compareIsUpload(
-            orderType === 1 ? "uuBuy" : "uuSell",
-            orderList[orderList.length - 1].createOrderTime,
-            orderList[0].createOrderTime,
-            page,
-            stagePage
-          ).then((p) => {
-            if (orderType === 2) {
-              if (!p) {
-                flags.uuSell = 100;
-                setUploadComplete("uuSell");
-                getUUData(cookie, 1);
-              } else {
-                getUUSellData(cookie, p + 1);
-              }
+    await new Promise((resolve) => setTimeout(resolve, intervalTimeList)); // 等待5秒
+    getRecordPage("uuuser", orderType === 1 ? "buy" : "sell").then(
+      (stagePage) => {
+        compareIsUpload(
+          orderType === 1 ? "uuBuy" : "uuSell",
+          orderList[orderList.length - 1].createOrderTime,
+          orderList[0].createOrderTime,
+          page,
+          stagePage
+        ).then((p) => {
+          if (orderType === 2) {
+            if (!p) {
+              flags.uuSell = 100;
+              setUploadComplete("uuSell");
+              getUUData(cookie, 1);
+            } else {
+              getUUSellData(cookie, p + 1);
             }
-            if (orderType === 1) {
-              if (!p) {
-                flags.uuBuy = 100;
-                setUploadComplete("uuBuy");
-              } else {
-                getUUData(cookie, p + 1);
-              }
+          }
+          if (orderType === 1) {
+            if (!p) {
+              flags.uuBuy = 100;
+              setUploadComplete("uuBuy");
+            } else {
+              getUUData(cookie, p + 1);
             }
-          });
-        }
-      );
-  
+          }
+        });
+      }
+    );
   } else {
     if (orderType === 1) {
       flags.uuBuy = 100;
@@ -250,29 +227,23 @@ const formatUUData = async (allData, page, orderType, cookie) => {
 };
 
 const uploadDataDetail = async (
-  detailData,
-  param,
-  page,
-  orderType,
-  platform,
-  isEnd
+  detailData:any,
+  param:any,
+  page:number,
+  orderType:number,
+  isEnd:boolean,
+  cookie:string
 ) => {
   const pause = await Pause();
   if (pause) return;
   const { uuSteamId } = await chrome.storage.local.get([`uuSteamId`]);
-  const {
-    orderNo,
-    productDetailList,
-    uUspecialList,
-    createOrderTime,
-  } = param;
+  const { orderNo, productDetailList, uUspecialList, createOrderTime } = param;
   //
   //   const uploadData = [];
   const { data } = detailData;
   const { userCommodityVOList } = data;
   const list = userCommodityVOList?.[0].commodityVOList;
-  const { commodityTemplateId, paintIndex, sellerSteamId } =
-    productDetailList?.[0];
+  const { commodityTemplateId, paintIndex } = productDetailList?.[0];
 
   // chrome.storage.local.set({
   //   [`UU-detail_${orderNo}_${steamid}`]: userCommodityVOList,
@@ -282,16 +253,12 @@ const uploadDataDetail = async (
   const detaildata = [];
   let index = 0;
 
-
   for (let item of list) {
     const {
       abrade,
       name,
       price,
       commodityHashName,
-      // assertId,
-      // paintSeed,
-      // fadeNumber,
       commodityId,
       dopplerName,
       isDoppler,
@@ -301,13 +268,13 @@ const uploadDataDetail = async (
 
     if (
       isDoppler === 0 &&
-      uUspecialList?.some((item) => commodityHashName?.includes(item))
+      uUspecialList?.some((item: any) => commodityHashName?.includes(item))
     ) {
       // 不是多普勒
       await new Promise((resolve) => setTimeout(resolve, intervalTimeDetail)); // 等待3秒
       //   获取特殊样式
-      const res  = await getUUSpeicalStyle(commodityId, cookie);
-      specialStyle = res.Data?.DopplerName || res?.Data?.HardenedName
+      const res: any = await getUUSpeicalStyle(commodityId, cookie);
+      specialStyle = res.Data?.DopplerName || res?.Data?.HardenedName;
     }
 
     if (!isMoreThan3Month(createOrderTime)) {

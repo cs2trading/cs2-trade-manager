@@ -9,7 +9,7 @@ function generateRandomString() {
   }
   return result;
 }
-function generateRandomString2(len) {
+function generateRandomString2(len:number) {
   const characters =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let result = "";
@@ -111,13 +111,14 @@ export const getNotice = async () => {
   return await data.json();
 };
 
-export const getC5Data = async (cookie, errorCb) => {
+export const getC5Data = async (cookie:string, errorCb:(type:string)=>void) => {
+
   try {
     const params = new URLSearchParams({
-      page: 1,
-      limit: 10,
-      appId: 730,
-      status: 3,
+      page: '1',
+      limit: '10',
+      appId: '730',
+      status: '3',
       type: "",
       keyword: "",
     });
@@ -127,6 +128,7 @@ export const getC5Data = async (cookie, errorCb) => {
       `https://www.c5game.com/napi/trade/search/v2/purchase/orders/list?${params}`,
       {
         method: "GET",
+        // @ts-ignore
         headers: {
           device: 1,
           platform: 2,
@@ -149,13 +151,13 @@ export const getC5Data = async (cookie, errorCb) => {
   }
 };
 
-export const getBuffData = async (cookie, errorCb) => {
+export const getBuffData = async (cookie:string, errorCb:(type:string)=>void) => {
   const params = new URLSearchParams({
-    page_num: 1,
-    page_size: 24,
+    page_num: "1",
+    page_size: "24",
     state: "success",
     game: "csgo",
-    appid: 730,
+    appid: "730",
   });
 
   try {
@@ -186,7 +188,8 @@ export const getBuffData = async (cookie, errorCb) => {
   }
 };
 
-export const getUUData = async (cookie, errorCb) => {
+export const getUUData = async (cookie:string, errorCb:(type:string)=>void) => {
+
   const headers = {
     tracestate: "bnro=android/11_android/8.12.1_okhttp/3.14.9",
     traceparent: "00-89981f9d92d94ef69aebe1ffc7f30273-97ab70354b502f17-01",
@@ -221,6 +224,7 @@ export const getUUData = async (cookie, errorCb) => {
       "https://api.youpin898.com/api/youpin/bff/trade/sale/v1/buy/list",
       {
         method: "POST",
+        // @ts-ignore
         headers: headers,
         body: JSON.stringify({
           keys: "",
@@ -238,9 +242,7 @@ export const getUUData = async (cookie, errorCb) => {
     if(data.code === 84101){
       errorCb("uu");
     }
-    // const {
-    //   data: { total },
-    // } = data;
+    
   } catch (error) {
     
       console.log("错误");
