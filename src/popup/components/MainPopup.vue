@@ -127,10 +127,10 @@
 </template>
 
 <script setup lang="ts">
-import { NButton, NSwitch,NSpin } from "naive-ui";
+import { NSpin } from "naive-ui";
 import { useCounterStore } from "../store/counter";
 import CustomSwitch from "./CustomSwitch.vue";
-import { ref, onMounted, watch, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import Message from "./Message.vue";
 import UpdateModal from "./UpdateModal.vue";
 import dayjs from "dayjs";
@@ -190,7 +190,7 @@ const clearStorage = async () => {
 
 let timer = null;
 const updateTime = ref("");
-const percentNum = ref(0);
+const percentNum = ref<string|number>(0);
 const canClick = ref(false); // 不能点击
 const canOpt = ref(false);  // 为false时 不能操作 开关或者按钮 
 
@@ -361,6 +361,7 @@ onMounted(() => {
   chrome.storage.local.get(["updateTime"], (data) => {
     updateTime.value = data?.updateTime || "";
   });
+  // @ts-ignore
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "update") {
       valideVersion();

@@ -201,24 +201,51 @@ const formatC5Data = async (
         compareIsUpload(
           orderType === 2 ? "c5Sell" : "c5Buy",
           list[list.length - 1].orderCreateTime,
-        
           page,
           stagePage
-        ).then((p) => {
+        ).then(async (p) => {
+          const { c5status } = await chrome.storage.local.get([`c5status`]);
+          console.log("c5status", c5status);
+
           if (orderType === 2) {
+            // 售出
             if (!p) {
-              flags.c5Sell = 100; // 标记完成
-              setUploadComplete("c5Sell");
-              getC5Data(cookie, 1, status);
+              if (c5status === completeStatus) {
+                // 存的状态是已完成的
+                getC5SellData(cookie, 1, receivedGoodsStatus);
+              } else {
+                // 存的是交易完成或者没存
+                flags.c5Sell = 100; // 标记完成
+                setUploadComplete("c5Sell");
+                getC5Data(cookie, 1, status);
+              }
             } else {
-              getC5SellData(cookie, p + 1, status);
+              getC5SellData(
+                cookie,
+                p + 1,
+                c5status === completeStatus
+                  ? completeStatus
+                  : receivedGoodsStatus
+              );
             }
           } else {
+            // 购买的
             if (!p) {
-              flags.c5Buy = 100; // 标记完成
-              setUploadComplete("c5Buy");
+              if (c5status === completeStatus) {
+                // 存的状态是已完成的
+                getC5Data(cookie, 1, receivedGoodsStatus);
+              } else {
+                flags.c5Buy = 100; // 标记完成
+                setUploadComplete("c5Buy");
+              }
             } else {
-              getC5Data(cookie, p + 1, status);
+              getC5Data(
+                cookie,
+                p + 1,
+                c5status === completeStatus
+                  ? completeStatus
+                  : receivedGoodsStatus
+              );
             }
           }
         });
@@ -247,7 +274,6 @@ export const getC5Data = async (
   status: number
 ) => {
   const pause = await Pause();
-  console.log("getC5Data,pause", pause);
   if (pause) return;
   if (page === 1) {
     flags.c5Buy = 0;
