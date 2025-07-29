@@ -205,48 +205,70 @@ const formatC5Data = async (
           stagePage
         ).then(async (p) => {
           const { c5status } = await chrome.storage.local.get([`c5status`]);
-          console.log("c5status", c5status);
+          console.log("c5status", orderType, c5status, p);
 
           if (orderType === 2) {
-            // 售出
             if (!p) {
-              if (c5status === completeStatus) {
-                // 存的状态是已完成的
+              if (status === completeStatus) {
                 getC5SellData(cookie, 1, receivedGoodsStatus);
               } else {
-                // 存的是交易完成或者没存
                 flags.c5Sell = 100; // 标记完成
                 setUploadComplete("c5Sell");
-                getC5Data(cookie, 1, status);
+                getC5Data(cookie, 1, completeStatus);
               }
             } else {
-              getC5SellData(
-                cookie,
-                p + 1,
-                c5status === completeStatus
-                  ? completeStatus
-                  : receivedGoodsStatus
-              );
+              getC5SellData(cookie, p + 1, status);
             }
+            // 售出
+            // if (!p) {
+            //   if (c5status === completeStatus || !c5status) {
+            //     // 存的状态是已完成的
+            //     getC5SellData(cookie, 1, receivedGoodsStatus);
+            //   } else {
+            //     // 存的是交易完成或者没存
+            //     flags.c5Sell = 100; // 标记完成
+            //     setUploadComplete("c5Sell");
+            //     getC5Data(cookie, 1, status);
+            //   }
+            // } else {
+            //   getC5SellData(
+            //     cookie,
+            //     p + 1,
+            //     c5status === completeStatus
+            //       ? completeStatus
+            //       : receivedGoodsStatus
+            //   );
+            // }
           } else {
             // 购买的
             if (!p) {
-              if (c5status === completeStatus) {
-                // 存的状态是已完成的
+              if(status===completeStatus){
                 getC5Data(cookie, 1, receivedGoodsStatus);
-              } else {
+              }else{
                 flags.c5Buy = 100; // 标记完成
                 setUploadComplete("c5Buy");
               }
+             
             } else {
-              getC5Data(
-                cookie,
-                p + 1,
-                c5status === completeStatus
-                  ? completeStatus
-                  : receivedGoodsStatus
-              );
+              getC5Data(cookie, p + 1, status);
             }
+            // if (!p) {
+            //   if (c5status === completeStatus || !c5status) {
+            //     // 存的状态是已完成的
+            //     getC5Data(cookie, 1, receivedGoodsStatus);
+            //   } else {
+            //     flags.c5Buy = 100; // 标记完成
+            //     setUploadComplete("c5Buy");
+            //   }
+            // } else {
+            //   getC5Data(
+            //     cookie,
+            //     p + 1,
+            //     c5status === completeStatus
+            //       ? completeStatus
+            //       : receivedGoodsStatus
+            //   );
+            // }
           }
         });
       }

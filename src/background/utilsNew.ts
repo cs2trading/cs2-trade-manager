@@ -89,8 +89,9 @@ export const updateRecordPage = async (
       [`${platform}status`]: status
     })
   }
+  console.log('更新页码',prevPage, page)
   // 如果上一次保存的页码小于这一次的页码，或者已经到了最后一页，则更新保存的页码
-  if (Number(prevPage) < page) {
+  if (Number(prevPage) <= page) {
     // 上一次存的页码 比这一次的大 不更新
     // 更新保存的页码
     saveRecordPage(
