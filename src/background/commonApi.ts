@@ -259,7 +259,7 @@ const uploadApi = async (
         headers: {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": "*",
-          "plugin-version": pkg.version, // "1.1.0", //
+          "plugin-version": pkg.version, 
         },
         body: JSON.stringify({
           tradeHistoryList: params,
