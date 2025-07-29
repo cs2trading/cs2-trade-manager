@@ -17,7 +17,7 @@ async function handlePlatformError(url: string, options: any, retries: number) {
   const raceRs = Promise.race([
     new Promise((resolve) => setTimeout(resolve, 60000)), // 等待 1 分钟
     new Promise((resolve, reject) => {
-      let timer:number | null = setInterval(() => {
+      let timer: number | null = setInterval(() => {
         Pause().then((res) => {
           if (res) {
             clearInterval(timer as number);
@@ -29,14 +29,14 @@ async function handlePlatformError(url: string, options: any, retries: number) {
     }),
   ]);
 
-  let rsData:any = await raceRs;
+  let rsData: any = await raceRs;
   if (rsData?.customError) {
     options?.resolve && options?.resolve(rsData);
     return rsData;
   }
   return null;
 }
-async function fetchWithRetry(url: string, options={} as any, retries = 3) {
+async function fetchWithRetry(url: string, options = {} as any, retries = 3) {
   const pause = await Pause();
   if (pause) {
     return { customError: "canceled" };
@@ -96,7 +96,10 @@ async function fetchWithRetry(url: string, options={} as any, retries = 3) {
     } else if (url.includes("/history")) {
       //
       const items = resData?.data?.items;
-
+      const { code } = resData; // Buff的登录
+      if (code === "Login Required") {
+        return { customError: "error" };
+      }
       console.log("history items：", items);
       // 如果响应数据不是数组，则重试
       if (!Array.isArray(items)) {
@@ -111,6 +114,7 @@ async function fetchWithRetry(url: string, options={} as any, retries = 3) {
           return { customError: "error" };
         }
       }
+
       // UU 出售&购买列表
     } else if (url.includes("v1/sell/list") || url.includes("v1/buy/list")) {
       console.log("%c@@@/sell/list===>", "color:red;font-size:15px", resData);
@@ -133,6 +137,14 @@ async function fetchWithRetry(url: string, options={} as any, retries = 3) {
         }
       }
       // 是我们的接口 0为正常 50001为版本升级 其他的报错均有问题
+    } else if (url.includes("www.c5game.com")) {
+      // C5的接口
+      const { errorCode } = resData;
+      console.log("C5的接口");
+      if (errorCode === 101) {
+        // 未登录 或者 token过期
+        return { customError: "error" };
+      }
     } else if (
       url.includes(BASE_URL) &&
       resData.errorCode !== 0 &&
@@ -154,6 +166,7 @@ async function fetchWithRetry(url: string, options={} as any, retries = 3) {
     options?.resolve && options?.resolve(resData);
     return resData;
   } catch (error) {
+    console.log(error);
     console.log("请求接口报错：", url, options);
     if (retries > 1) {
       console.warn(
@@ -181,11 +194,11 @@ export const splitArrayIntoChunks = (arr: any, chunkSize = 100) => {
 };
 
 export const uploadDataToServer = async (
-  data:any,
-  page:number,
-  orderType:number,
-  platform:string,
-  isEnd:boolean
+  data: any,
+  page: number,
+  orderType: number,
+  platform: string,
+  isEnd: boolean
 ) => {
   if (data.length < 1) {
     return;
@@ -268,7 +281,6 @@ const uploadApi = async (
 
       if (uploadRes.success && isRecord) {
         updateRecordDate(
-     
           orderType,
           platform,
           params[params.length - 1]?.tradeTime
@@ -358,7 +370,15 @@ export const getC5BuyApi = async (
   });
 };
 
-export const getC5DetailApi = async ({ orderId, orderType, cookie }: { orderId: string, orderType: number, cookie: string }) => {
+export const getC5DetailApi = async ({
+  orderId,
+  orderType,
+  cookie,
+}: {
+  orderId: string;
+  orderType: number;
+  cookie: string;
+}) => {
   return await new Promise(async (resolve) => {
     const typeStr = orderType === 1 ? "buyer-order" : "seller-order"; // 1 买入  2 售出
 
@@ -386,10 +406,10 @@ export const getBuffSellApi = async (cookie: string, page: number) => {
   return await new Promise(async (resolve) => {
     const params = new URLSearchParams({
       page_num: page.toString(),
-      page_size: '24',
+      page_size: "24",
       state: "success",
       game: "csgo",
-      appid: '730',
+      appid: "730",
     });
 
     const allData = await fetchWithRetry(
@@ -414,10 +434,10 @@ export const getBuffApi = async (cookie: string, page: number) => {
   return await new Promise(async (resolve) => {
     const params = new URLSearchParams({
       page_num: page.toString(),
-      page_size: '24',
+      page_size: "24",
       state: "success",
       game: "csgo",
-      appid: '730'
+      appid: "730",
     });
     const allData = await fetchWithRetry(
       `https://buff.163.com/api/market/buy_order/history?${params}`,
@@ -480,13 +500,9 @@ export const getBuffDetailList = async (param: any) => {
       }
     );
     exceptionHandlingBuff(detailListRes);
-    const collectDetailDataBuff:any[] = [];
-    const {
-      items,
-      goods_infos,
-      created_at
-    } = detailListRes?.data;
-    items.forEach((item:any) => {
+    const collectDetailDataBuff: any[] = [];
+    const { items, goods_infos, created_at } = detailListRes?.data;
+    items.forEach((item: any) => {
       const { asset_info } = item;
       if (!isMoreThan3Month(created_at)) {
         collectDetailDataBuff.push({
