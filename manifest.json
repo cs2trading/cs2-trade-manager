@@ -18,7 +18,6 @@
     "service_worker": "background/service-worker.js"
   },
   "permissions": [
-    "activeTab",
     "tabs",
     "alarms",
     "storage",
