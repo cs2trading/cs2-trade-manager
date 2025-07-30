@@ -26,7 +26,7 @@ export const getC5SellData = async (
   if (pause) return;
   if (page === 1) {
     flags.c5Sell = 0;
-    await genetate90date("c5Sell");
+    await genetate90date(`c5${status}Sell`);
   }
 
   const data = await getC5SellApi(cookie, page, status);
@@ -96,7 +96,7 @@ const formatC5Data = async (
       uploadData,
       page,
       orderType,
-      "c5",
+      "c5"+status,
       list?.length < 70
     );
   }
@@ -153,7 +153,7 @@ const formatC5Data = async (
         detailList,
         page,
         orderType,
-        "c5",
+        "c5"+status,
         list?.length < 70
       );
     }
@@ -172,15 +172,14 @@ const formatC5Data = async (
     } else if (orderType === 2 && status === receivedGoodsStatus) {
       // 已收货的获取完成
       flags.c5Sell = 100; // 标记完成
-      setUploadComplete("c5Sell");
+      setUploadComplete("c512Sell");
       getC5Data(cookie, 1, completeStatus); // 获取购买的 已完成的订单
-    } else if (orderType === 1 && status === completeStatus) {
-      getC5Data(cookie, 1, receivedGoodsStatus); // 获取卖出的 已完成的订单
-    } else if (orderType === 1 && status === receivedGoodsStatus) {
+    } else if (orderType === 1 ) {
       // 购买的订单也获取完成了
       flags.c5Buy = 100; // 标记完成
-      setUploadComplete("c5Buy");
+      setUploadComplete("c53Buy");
     }
+   
     return;
   }
   if (orderType === 2) {
@@ -196,96 +195,55 @@ const formatC5Data = async (
     !isMoreThan3Month(list?.[list.length - 1].orderCreateTime)
   ) {
     await new Promise((resolve) => setTimeout(resolve, intervalTimeList)); // 等待5秒
-    getRecordPage("c5user", orderType === 2 ? "sell" : "buy").then(
+    getRecordPage(`c5${status}user`, orderType === 2 ? "sell" : "buy").then(
       (stagePage) => {
         compareIsUpload(
-          orderType === 2 ? "c5Sell" : "c5Buy",
+          orderType === 2 ? `c5${status}Sell` : `c5${status}Buy`,
           list[list.length - 1].orderCreateTime,
           page,
           stagePage
         ).then(async (p) => {
-          const { c5status } = await chrome.storage.local.get([`c5status`]);
-          console.log("c5status", orderType, c5status, p);
+        
 
           if (orderType === 2) {
             if (!p) {
+             
               if (status === completeStatus) {
                 getC5SellData(cookie, 1, receivedGoodsStatus);
               } else {
                 flags.c5Sell = 100; // 标记完成
-                setUploadComplete("c5Sell");
+                setUploadComplete("c512Sell");
                 getC5Data(cookie, 1, completeStatus);
               }
             } else {
               getC5SellData(cookie, p + 1, status);
             }
-            // 售出
-            // if (!p) {
-            //   if (c5status === completeStatus || !c5status) {
-            //     // 存的状态是已完成的
-            //     getC5SellData(cookie, 1, receivedGoodsStatus);
-            //   } else {
-            //     // 存的是交易完成或者没存
-            //     flags.c5Sell = 100; // 标记完成
-            //     setUploadComplete("c5Sell");
-            //     getC5Data(cookie, 1, status);
-            //   }
-            // } else {
-            //   getC5SellData(
-            //     cookie,
-            //     p + 1,
-            //     c5status === completeStatus
-            //       ? completeStatus
-            //       : receivedGoodsStatus
-            //   );
-            // }
+            
           } else {
             // 购买的
             if (!p) {
-              if(status===completeStatus){
-                getC5Data(cookie, 1, receivedGoodsStatus);
-              }else{
-                flags.c5Buy = 100; // 标记完成
-                setUploadComplete("c5Buy");
-              }
-             
+               flags.c5Buy = 100; // 标记完成
+                setUploadComplete("c53Buy");
             } else {
               getC5Data(cookie, p + 1, status);
             }
-            // if (!p) {
-            //   if (c5status === completeStatus || !c5status) {
-            //     // 存的状态是已完成的
-            //     getC5Data(cookie, 1, receivedGoodsStatus);
-            //   } else {
-            //     flags.c5Buy = 100; // 标记完成
-            //     setUploadComplete("c5Buy");
-            //   }
-            // } else {
-            //   getC5Data(
-            //     cookie,
-            //     p + 1,
-            //     c5status === completeStatus
-            //       ? completeStatus
-            //       : receivedGoodsStatus
-            //   );
-            // }
+           
           }
         });
       }
     );
   } else {
+  
     // 同样 4种情况
     if (orderType === 2 && status === completeStatus) {
       getC5SellData(cookie, 1, receivedGoodsStatus); // 去获取已收货的
     } else if (orderType === 2 && status === receivedGoodsStatus) {
       flags.c5Sell = 100; // 标记完成
-      setUploadComplete("c5Sell");
+      setUploadComplete("c512Sell");
       getC5Data(cookie, 1, completeStatus); // 获取购买的 已完成的订单
-    } else if (orderType === 1 && status === completeStatus) {
-      getC5Data(cookie, 1, receivedGoodsStatus); // 获取卖出的 已完成的订单
-    } else if (orderType === 1 && status === receivedGoodsStatus) {
+    } else if (orderType === 1) {
       flags.c5Buy = 100; // 标记购买完成
-      setUploadComplete("c5Buy");
+      setUploadComplete("c53Buy");
     }
   }
 };
@@ -299,7 +257,7 @@ export const getC5Data = async (
   if (pause) return;
   if (page === 1) {
     flags.c5Buy = 0;
-    await genetate90date("c5Buy");
+    await genetate90date(`c5${status}Buy`);
   }
   const allData = await getC5BuyApi(cookie, page, status);
   await formatC5Data(allData, page, 1, cookie, status); // 整理数据 并上传

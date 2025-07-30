@@ -36,13 +36,14 @@ export const errorCb = (type: string) => {
 };
 
 export const getRecordPage = async (key: string, type: string) => {
-  const user = await chrome.storage.local.get([key]);
-  const userKey = user[key];
+  const user = await chrome.storage.local.get([key.includes('c5')?'c5user':key]);
+  const userKey = user[key.includes('c5')?'c5user':key];
   if (userKey) {
     const page = await chrome.storage.local.get([
       `${userKey}${type}${key}Page`,
     ]);
     const storePage = page[`${userKey}${type}${key}Page`];
+    console.log('存储的日期',`${userKey}${type}${key}Page`, storePage)
     return storePage || 1;
   }
   return 1;
@@ -54,10 +55,11 @@ const saveRecordPage = async (
   page: number,
   isEnd: boolean
 ) => {
+  console.log('保存', key,type)
   // 从本地存储中获取用户信息
-  const user = await chrome.storage.local.get([key]);
+  const user = await chrome.storage.local.get([key.includes('c5')?'c5user':key]);
   // 获取用户信息中的key值
-  const userKey = user[key];
+  const userKey = user[key.includes('c5')?'c5user':key];
 
   if (page >= 1) {
     chrome.storage.local.set({
@@ -84,14 +86,10 @@ export const updateRecordPage = async (
     `${platform}user`,
     orderType === 1 ? "buy" : "sell"
   );
-  if (platform==='c5') { // 仅针对c5
-    chrome.storage.local.set({
-      [`${platform}status`]: status
-    })
-  }
+  
   console.log('更新页码',prevPage, page)
   // 如果上一次保存的页码小于这一次的页码，或者已经到了最后一页，则更新保存的页码
-  if (Number(prevPage) <= page) {
+  if (Number(prevPage) <= page || isEnd) {
     // 上一次存的页码 比这一次的大 不更新
     // 更新保存的页码
     saveRecordPage(
