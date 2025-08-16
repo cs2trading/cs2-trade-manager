@@ -319,7 +319,7 @@ export const getC5SellApi = async (
       keyword: "",
     });
     const allData = await fetchWithRetry(
-      `https://www.c5game.com/napi/trade/search/v3/merchant/orders/list?${params}`,
+      `https://www.c5game.com/api/v1/search/v3/merchant/orders/list?${params}`,
       {
         method: "GET",
         headers: {
@@ -353,7 +353,7 @@ export const getC5BuyApi = async (
 
     // 购买记录
     const allData = await fetchWithRetry(
-      `https://www.c5game.com/napi/trade/search/v2/purchase/orders/list?${params}`,
+      `https://www.c5game.com/api/v1/search/v2/purchase/orders/list?${params}`,
       {
         method: "GET",
         headers: {
@@ -382,7 +382,7 @@ export const getC5DetailApi = async ({
   return await new Promise(async (resolve) => {
     const typeStr = orderType === 1 ? "buyer-order" : "seller-order"; // 1 买入  2 售出
 
-    const url = `https://www.c5game.com/napi/trade/support/order/v1/${typeStr}/${orderId}`;
+    const url = `https://www.c5game.com/api/v1/support/order/v1/${typeStr}/${orderId}`;
     const data = await fetchWithRetry(url, {
       method: "GET",
       headers: {

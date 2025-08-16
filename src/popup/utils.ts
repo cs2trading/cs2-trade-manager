@@ -125,7 +125,7 @@ export const getC5Data = async (cookie:string, errorCb:(type:string)=>void) => {
 
     // 购买记录
     const response = await fetch(
-      `https://www.c5game.com/napi/trade/search/v2/purchase/orders/list?${params}`,
+      `https://www.c5game.com/api/v1/search/v2/purchase/orders/list?${params}`,
       {
         method: "GET",
         // @ts-ignore
