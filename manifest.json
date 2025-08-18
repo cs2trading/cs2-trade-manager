@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "CS2交易记录管理工具",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Chrome 插件",
   "icons": {
     "16": "icons/icon_16.png",
