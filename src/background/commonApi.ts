@@ -521,7 +521,7 @@ export const getBuffDetailList = async (param: any) => {
           instanceId: asset_info?.instanceid,
           paintIndex: asset_info?.info?.paintindex,
           paintSeed: asset_info?.info?.paintseed,
-          specialStyle: asset_info?.info?.phase_data,
+          specialStyle: typeof asset_info?.info?.phase_data === 'string' ? asset_info?.info?.phase_data : asset_info?.info?.phase_data?.name,
           fade: "", // 没有
         });
       }
