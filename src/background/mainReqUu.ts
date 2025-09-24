@@ -82,12 +82,11 @@ const formatUUData = async (
     noNeedDetail
   );
   for (let item of noNeedDetail) {
-    const { productDetailList } = item;
+    const { productDetailList ,createOrderTime} = item;
     for (let productDetail of productDetailList) {
       const {
         orderDetailNo,
         abrade,
-        createOrderTime,
         price,
         commodityHashName,
         assertId,
@@ -113,6 +112,7 @@ const formatUUData = async (
         const res: any = await getUUSpeicalStyle(commodityId, cookie);
         specialStyle = res.Data?.DopplerName || res?.Data?.HardenedName;
       }
+    
       if (!isMoreThan3Month(createOrderTime)) {
         uploadData.push({
           commodityName,
